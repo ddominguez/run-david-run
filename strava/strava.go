@@ -34,7 +34,7 @@ type Activity struct {
 
 type Client struct {
 	httpclient http.Client
-	token      string
+	headers    map[string]string
 }
 
 func (c *Client) Get(url string) (*http.Response, error) {
@@ -42,11 +42,13 @@ func (c *Client) Get(url string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	for k, v := range c.headers {
+		req.Header.Add(k, v)
+	}
 	return c.Do(req)
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
 	resp, err := c.httpclient.Do(req)
 	if err != nil {
 		return nil, err
@@ -57,11 +59,28 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func NewClient(token string) *Client {
+func NewClient(headers map[string]string) *Client {
 	return &Client{
 		httpclient: http.Client{Timeout: 10 * time.Second},
-		token:      token,
+		headers:    headers,
 	}
+}
+
+type Authorization struct {
+	clientId     string
+	clientSecret string
+	redirectUri  string
+	scope        string
+}
+
+// url returns a url for authentication
+func (a *Authorization) url() string {
+	qs := url.Values{}
+	qs.Set("client_id", a.clientId)
+	qs.Set("redirect_uri", a.redirectUri)
+	qs.Set("response_type", "code")
+	qs.Set("scope", a.scope)
+	return fmt.Sprintf("%s?%s", oauth_uri, qs.Encode())
 }
 
 // GetActivity will return a strava activity for an authorized user
