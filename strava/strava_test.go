@@ -13,13 +13,13 @@ func TestNewClient(t *testing.T) {
 	expectedTimeout := 10 * time.Second
 	resultTimeout := c.httpclient.Timeout
 	if resultTimeout != expectedTimeout {
-		t.Fatalf("Timeout result(%d), expected(%d)", resultTimeout, expectedTimeout)
+		t.Errorf("Incorrect client timeout value. Found(%d), Expected(%d)", resultTimeout, expectedTimeout)
 	}
 
 	expectedHeadersLen := len(headers)
 	resultHeadersLen := len(c.headers)
 	if resultHeadersLen != expectedHeadersLen {
-		t.Fatalf("Headers length result(%d), expected(%d)", resultHeadersLen, expectedHeadersLen)
+		t.Errorf("Incorrect client headers length. Found(%d), Expected(%d)", resultHeadersLen, expectedHeadersLen)
 	}
 }
 
@@ -28,20 +28,21 @@ func TestNewClientWithHeaders(t *testing.T) {
 	headers["Authorization"] = "Bearer Token"
 	c := NewClient(headers)
 
-	val, ok := c.headers["Authorization"]
+	expectedHeaderName := "Authorization"
+	val, ok := c.headers[expectedHeaderName]
 	if !ok {
-		t.Fatal("Header `Authorization` not found")
+		t.Errorf("Expected header `%s` not found", expectedHeaderName)
 	}
 
 	expectedToken := "Bearer Token"
 	if val != expectedToken {
-		t.Fatalf("Header `Authorization` result(%s), expected(%s)", val, expectedToken)
+		t.Errorf("Header `%s` has wrong value. Found(%s), Expected(%s)", expectedHeaderName, val, expectedToken)
 	}
 
 	expectedHeadersLen := len(headers)
 	resultHeadersLen := len(c.headers)
 	if resultHeadersLen != expectedHeadersLen {
-		t.Fatalf("Headers length result(%d), expected(%d)", resultHeadersLen, expectedHeadersLen)
+		t.Errorf("Incorrect client headers length. Found(%d), Expected(%d)", resultHeadersLen, expectedHeadersLen)
 	}
 }
 
@@ -55,12 +56,12 @@ func TestAuthorizationUrl(t *testing.T) {
 	authUrl := a.url()
 	u, err := url.Parse(authUrl)
 	if err != nil {
-		t.Fatalf("%s is an invalid url", authUrl)
+		t.Errorf("%s is an invalid url. %s", authUrl, err)
 	}
 
 	expectedPath := "/oauth/authorize"
 	if u.Path != expectedPath {
-		t.Fatalf("Authorization url has incorrect path. Found(%s), Expected(%s)", u.Path, expectedPath)
+		t.Errorf("Authorization url has incorrect path. Found(%s), Expected(%s)", u.Path, expectedPath)
 	}
 
 	testCases := []struct {
@@ -76,10 +77,10 @@ func TestAuthorizationUrl(t *testing.T) {
 	resParams := u.Query()
 	for _, tc := range testCases {
 		if !resParams.Has(tc.expectedParam) {
-			t.Fatalf("Authorization url expected `%s` in query params", tc.expectedParam)
+			t.Errorf("Authorization url expected `%s` in query params", tc.expectedParam)
 		}
 		if resParams.Get(tc.expectedParam) != tc.expectedValue {
-			t.Fatalf("Query param `%s` result(%s). expected(%s)", tc.expectedParam, resParams.Get(tc.expectedParam), tc.expectedValue)
+			t.Errorf("Query param `%s` has incorrect value. Found(%s), Expected(%s)", tc.expectedParam, resParams.Get(tc.expectedParam), tc.expectedValue)
 		}
 	}
 }
