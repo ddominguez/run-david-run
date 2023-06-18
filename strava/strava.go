@@ -80,7 +80,7 @@ func (a *Authorization) url() string {
 	qs.Set("redirect_uri", a.redirectUri)
 	qs.Set("response_type", "code")
 	qs.Set("scope", a.scope)
-	return fmt.Sprintf("%s?%s", oauth_uri, qs.Encode())
+	return fmt.Sprintf("%s/authorize?%s", oauth_uri, qs.Encode())
 }
 
 // GetActivity will return a strava activity for an authorized user

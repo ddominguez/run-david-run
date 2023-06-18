@@ -1,6 +1,7 @@
 package strava
 
 import (
+	"net/url"
 	"testing"
 	"time"
 )
@@ -41,5 +42,44 @@ func TestNewClientWithHeaders(t *testing.T) {
 	resultHeadersLen := len(c.headers)
 	if resultHeadersLen != expectedHeadersLen {
 		t.Fatalf("Headers length result(%d), expected(%d)", resultHeadersLen, expectedHeadersLen)
+	}
+}
+
+func TestAuthorizationUrl(t *testing.T) {
+	a := Authorization{
+		clientId:     "testid",
+		clientSecret: "testsecret",
+		redirectUri:  "http://test.com/redirect",
+		scope:        "testscope",
+	}
+	authUrl := a.url()
+	u, err := url.Parse(authUrl)
+	if err != nil {
+		t.Fatalf("%s is an invalid url", authUrl)
+	}
+
+	expectedPath := "/oauth/authorize"
+	if u.Path != expectedPath {
+		t.Fatalf("Authorization url has incorrect path. Found(%s), Expected(%s)", u.Path, expectedPath)
+	}
+
+	testCases := []struct {
+		expectedParam string
+		expectedValue string
+	}{
+		{"client_id", a.clientId},
+		{"redirect_uri", a.redirectUri},
+		{"scope", a.scope},
+		{"response_type", "code"},
+	}
+
+	resParams := u.Query()
+	for _, tc := range testCases {
+		if !resParams.Has(tc.expectedParam) {
+			t.Fatalf("Authorization url expected `%s` in query params", tc.expectedParam)
+		}
+		if resParams.Get(tc.expectedParam) != tc.expectedValue {
+			t.Fatalf("Query param `%s` result(%s). expected(%s)", tc.expectedParam, resParams.Get(tc.expectedParam), tc.expectedValue)
+		}
 	}
 }
