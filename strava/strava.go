@@ -1,6 +1,7 @@
 package strava
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,7 @@ const api_uri = "https://www.strava.com/api/v3"
 const oauth_uri = "https://www.strava.com/oauth"
 
 type Activity struct {
-	Id             int64     `json:"id"`
+	Id             uint64    `json:"id"`
 	Name           string    `json:"name"`
 	Distance       float64   `json:"distance"`
 	MovingTime     int       `json:"moving_time"`
@@ -30,6 +31,14 @@ type Activity struct {
 		Polyline        string `json:"polyline"`
 		SummaryPolyline string `json:"summary_polyline"`
 	} `json:"map"`
+}
+
+type Athlete struct {
+	Id            uint64 `json:"id"`
+	FirstName     string `json:"firstname"`
+	LastName      string `json:"lastname"`
+	Profile       string `json:"profile"`
+	ProfileMedium string `json:"profile_medium"`
 }
 
 type Client struct {
@@ -67,20 +76,65 @@ func NewClient(headers map[string]string) *Client {
 }
 
 type Authorization struct {
-	clientId     string
-	clientSecret string
-	redirectUri  string
-	scope        string
+	ClientId     string
+	ClientSecret string
+	RedirectUri  string
+	Scope        string
 }
 
-// url returns a url for authentication
-func (a *Authorization) url() string {
+type authTokenResp struct {
+	TokenType    string  `json:"token_type"`
+	ExpiresAt    uint32  `json:"expires_at"`
+	ExpiresIn    uint32  `json:"expires_in"`
+	RefreshToken string  `json:"refresh_token"`
+	AccessToken  string  `json:"access_token"`
+	Athlete      Athlete `json:"athlete"`
+}
+
+// Url returns a Url for authentication
+func (a *Authorization) Url() string {
 	qs := url.Values{}
-	qs.Set("client_id", a.clientId)
-	qs.Set("redirect_uri", a.redirectUri)
+	qs.Set("client_id", a.ClientId)
+	qs.Set("redirect_uri", a.RedirectUri)
 	qs.Set("response_type", "code")
-	qs.Set("scope", a.scope)
+	qs.Set("scope", a.Scope)
 	return fmt.Sprintf("%s/authorize?%s", oauth_uri, qs.Encode())
+}
+
+func (a *Authorization) ReqAccessToken(code string) (authTokenResp, error) {
+	payload := struct {
+		ClientId     string `json:"client_id"`
+		ClientSecret string `json:"client_secret"`
+		Code         string `json:"code"`
+		GrantType    string `json:"grant_type"`
+	}{
+		ClientId:     a.ClientId,
+		ClientSecret: a.ClientSecret,
+		Code:         code,
+		GrantType:    "authorization_code",
+	}
+
+	var tkResp authTokenResp
+
+	reqBody, err := json.Marshal(payload)
+	if err != nil {
+		return tkResp, fmt.Errorf("Unable to create request body for requesting access token. %s", err)
+	}
+
+	resp, err := http.Post(fmt.Sprintf("%s/token", oauth_uri), "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return tkResp, fmt.Errorf("Unable to request access token. %s", err)
+	}
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(&tkResp); err != nil {
+		return tkResp, fmt.Errorf("Failed to decode response body. %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return tkResp, fmt.Errorf(resp.Status)
+	}
+	return tkResp, nil
 }
 
 // GetActivity will return a strava activity for an authorized user

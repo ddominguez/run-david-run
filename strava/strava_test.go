@@ -48,12 +48,12 @@ func TestNewClientWithHeaders(t *testing.T) {
 
 func TestAuthorizationUrl(t *testing.T) {
 	a := Authorization{
-		clientId:     "testid",
-		clientSecret: "testsecret",
-		redirectUri:  "http://test.com/redirect",
-		scope:        "testscope",
+		ClientId:     "testid",
+		ClientSecret: "testsecret",
+		RedirectUri:  "http://test.com/redirect",
+		Scope:        "testscope",
 	}
-	authUrl := a.url()
+	authUrl := a.Url()
 	u, err := url.Parse(authUrl)
 	if err != nil {
 		t.Errorf("%s is an invalid url. %s", authUrl, err)
@@ -68,9 +68,9 @@ func TestAuthorizationUrl(t *testing.T) {
 		expectedParam string
 		expectedValue string
 	}{
-		{"client_id", a.clientId},
-		{"redirect_uri", a.redirectUri},
-		{"scope", a.scope},
+		{"client_id", a.ClientId},
+		{"redirect_uri", a.RedirectUri},
+		{"scope", a.Scope},
 		{"response_type", "code"},
 	}
 
