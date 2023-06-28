@@ -101,26 +101,59 @@ func main() {
 		log.Println("strava auth data not found.", err)
 	}
 
+	oauth := strava.Authorization{
+		ClientId:     os.Getenv("STRAVA_CLIENT_ID"),
+		ClientSecret: os.Getenv("STRAVA_CLIENT_SECRET"),
+		RedirectUri:  "http://localhost:8080/callback",
+		Scope:        "activity:read_all",
+	}
+
 	// If access token does not exist get new access token data and save to db
 	// Save athlete data if not exists
 	if !stravaAuth.Exists() {
-		auth := strava.Authorization{
-			ClientId:     os.Getenv("STRAVA_CLIENT_ID"),
-			ClientSecret: os.Getenv("STRAVA_CLIENT_SECRET"),
-			RedirectUri:  "http://localhost:8080/callback",
-			Scope:        "activity:read_all",
-		}
-		log.Println("Click to authorize on strava:", auth.Url())
-		runServer(pgxDB, auth)
+		log.Println("Click to authorize on strava:", oauth.Url())
+		runServer(pgxDB, oauth)
 
 		stravaAuth, err = db.SelectStravaAuth(pgxDB)
 		if err != nil {
 			log.Fatalln("strava auth data not found.", err)
 		}
 	}
+	// use valid access token to fetch race activities from stava and save to db
+	h := map[string]string{"Authorization": "Bearer " + stravaAuth.AccessToken}
+	c := strava.NewClient(h)
 
 	// if expired use refresh token to new access token and save to db
+	if stravaAuth.IsExpired() {
+		log.Println("Access token is expired. Get a new one.")
+		tkResp, err := oauth.RefreshToken(stravaAuth.RefreshToken)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		stravaAuth = db.StravaAuth{
+			AccessToken:  tkResp.AccessToken,
+			ExpiresAt:    tkResp.ExpiresAt,
+			RefreshToken: tkResp.RefreshToken,
+			AthleteId:    stravaAuth.AthleteId,
+		}
+		if err := db.UpdateStravaAuth(pgxDB, stravaAuth); err != nil {
+			log.Fatalln("Failed to update db table `strava_auth`. " + err.Error())
+		}
+	}
 
-	// use valid access token to fetch race activities from stava and save to db
-	log.Println(stravaAuth)
+	page := uint16(1)
+	activities, err := strava.GetActivities(c, page, 30)
+	if err != nil {
+		log.Println(err)
+	}
+	if len(activities) == 0 {
+		log.Println("No more activities")
+	}
+	for _, a := range activities {
+		if a.SportType != "Run" || a.WorkoutType != 1 {
+			continue
+		}
+		log.Println(a.Id, a.Name, a.SportType, a.WorkoutType)
+	}
 }

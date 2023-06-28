@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -18,7 +19,8 @@ type Activity struct {
 	Distance       float64   `json:"distance"`
 	MovingTime     int       `json:"moving_time"`
 	ElapsedTime    int       `json:"elapsed_time"`
-	Type           string    `json:"type"`
+	SportType      string    `json:"sport_type"`
+	WorkoutType    uint8     `json:"workout_type"`
 	StartDate      time.Time `json:"start_date"`
 	StartDateLocal time.Time `json:"start_date_local"`
 	TimeZone       string    `json:"time_zone"`
@@ -39,6 +41,15 @@ type Athlete struct {
 	LastName      string `json:"lastname"`
 	Profile       string `json:"profile"`
 	ProfileMedium string `json:"profile_medium"`
+}
+
+type authTokenResp struct {
+	TokenType    string  `json:"token_type"`
+	ExpiresAt    uint64  `json:"expires_at"`
+	ExpiresIn    uint64  `json:"expires_in"`
+	RefreshToken string  `json:"refresh_token"`
+	AccessToken  string  `json:"access_token"`
+	Athlete      Athlete `json:"athlete,omitempty"`
 }
 
 type Client struct {
@@ -80,15 +91,6 @@ type Authorization struct {
 	ClientSecret string
 	RedirectUri  string
 	Scope        string
-}
-
-type authTokenResp struct {
-	TokenType    string  `json:"token_type"`
-	ExpiresAt    uint64  `json:"expires_at"`
-	ExpiresIn    uint64  `json:"expires_in"`
-	RefreshToken string  `json:"refresh_token"`
-	AccessToken  string  `json:"access_token"`
-	Athlete      Athlete `json:"athlete"`
 }
 
 // Url returns a Url for authentication
@@ -137,6 +139,39 @@ func (a *Authorization) ReqAccessToken(code string) (authTokenResp, error) {
 	return tkResp, nil
 }
 
+func (a *Authorization) RefreshToken(refreshToken string) (authTokenResp, error) {
+	payload := map[string]string{
+		"client_id":     a.ClientId,
+		"client_secret": a.ClientSecret,
+		"grant_type":    "refresh_token",
+		"refresh_token": refreshToken,
+	}
+
+	var tkResp authTokenResp
+
+	reqBody, err := json.Marshal(payload)
+	if err != nil {
+		log.Println(err)
+		return tkResp, nil
+	}
+
+	resp, err := http.Post(fmt.Sprintf("%s/token", oauth_uri), "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return tkResp, fmt.Errorf("Unable to request access token. %s", err)
+	}
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(&tkResp); err != nil {
+		return tkResp, fmt.Errorf("Failed to decode response body. %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return tkResp, fmt.Errorf(resp.Status)
+	}
+
+	return tkResp, nil
+}
+
 // GetActivity will return a strava activity for an authorized user
 func GetActivity(c *Client, id uint64) (Activity, error) {
 	var activity Activity
@@ -154,7 +189,7 @@ func GetActivity(c *Client, id uint64) (Activity, error) {
 }
 
 // GetActivities will return an array of strava activities for an authorized user
-func GetActivities(c *Client, page int8, perPage int8) ([]Activity, error) {
+func GetActivities(c *Client, page uint16, perPage uint8) ([]Activity, error) {
 	var activities []Activity
 
 	qs := url.Values{}

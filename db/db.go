@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -31,6 +32,11 @@ func (s *StravaAuth) Exists() bool {
 	return s.AthleteId > 0
 }
 
+func (s *StravaAuth) IsExpired() bool {
+	now := time.Now()
+	return now.Unix() > int64(s.ExpiresAt)
+}
+
 // SelectStravaAuth selects and returns a single strava_auth record
 func SelectStravaAuth(pgxConn *PgxConn) (StravaAuth, error) {
 	q := `SELECT access_token, access_token_expires_at, refresh_token, athlete_id FROM strava_auth LIMIT 1`
@@ -48,6 +54,15 @@ func SelectStravaAuth(pgxConn *PgxConn) (StravaAuth, error) {
 func InsertStravaAuth(pgxConn *PgxConn, accessToken, refreshToken string, expiresAt, athleteId uint64) error {
 	q := `INSERT INTO strava_auth(access_token, access_token_expires_at, refresh_token, athlete_id) VALUES ($1, $2, $3, $4)`
 	_, err := pgxConn.Pool.Exec(context.Background(), q, accessToken, expiresAt, refreshToken, athleteId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateStravaAuth(pgxConn *PgxConn, sa StravaAuth) error {
+	q := `UPDATE strava_auth SET access_token=$1, access_token_expires_at=$2, refresh_token=$3 WHERE athlete_id=$4`
+	_, err := pgxConn.Pool.Exec(context.Background(), q, sa.AccessToken, sa.ExpiresAt, sa.RefreshToken, sa.AthleteId)
 	if err != nil {
 		return err
 	}
