@@ -12,7 +12,7 @@ import (
 )
 
 // runServer creates new a new http server and will shutdown
-// once the strava access token is requested and saved
+// once strava token and athlete data is requested and saved.
 func runServer(pgxConn *db.PgxConn, auth strava.Authorization) {
 	log.Println("Http server started")
 	log.Println("Listening on http://localhost:8080")
@@ -37,8 +37,32 @@ func runServer(pgxConn *db.PgxConn, auth strava.Authorization) {
 			http.Error(w, "bad request.", http.StatusBadRequest)
 			return
 		}
-		if err := db.InsertStravaAuth(pgxConn, resp.AccessToken, resp.RefreshToken, resp.ExpiresAt, resp.Athlete.Id); err != nil {
+		if err := db.InsertStravaAuth(
+			pgxConn,
+			resp.AccessToken,
+			resp.RefreshToken,
+			resp.ExpiresAt,
+			resp.Athlete.Id); err != nil {
 			log.Println(err)
+		}
+
+		// check if athlete record exists
+		athlete, err := db.SelectStravaAthleteById(pgxConn, resp.Athlete.Id)
+		if err != nil {
+			log.Println(err)
+		}
+
+		// create athlete record if not exist
+		if !athlete.Exists() {
+			if err := db.InsertStravaAthelete(
+				pgxConn,
+				resp.Athlete.Id,
+				resp.Athlete.FirstName,
+				resp.Athlete.LastName,
+				resp.Athlete.Profile,
+				resp.Athlete.ProfileMedium); err != nil {
+				log.Println(err)
+			}
 		}
 		w.Write([]byte("thank you."))
 		cancel()
