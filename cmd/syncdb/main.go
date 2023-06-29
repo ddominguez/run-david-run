@@ -143,9 +143,9 @@ func main() {
 		log.Println("No more activities")
 	}
 	for _, a := range activities {
-		if a.SportType != "Run" || a.WorkoutType != 1 {
+		if !a.IsRace() {
 			continue
 		}
-		log.Println(a.Id, a.Name, a.SportType, a.WorkoutType)
+		log.Println(a.Id, a.Name)
 	}
 }

@@ -35,6 +35,11 @@ type Activity struct {
 	} `json:"map"`
 }
 
+// IsRace will return true for running race events
+func (a *Activity) IsRace() bool {
+	return a.SportType == "Run" && a.WorkoutType == 1
+}
+
 type Athlete struct {
 	Id            uint64 `json:"id"`
 	FirstName     string `json:"firstname"`
