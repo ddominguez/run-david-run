@@ -46,13 +46,11 @@ func runServer(pgxConn *db.PgxConn, auth strava.Authorization) {
 			log.Println(err)
 		}
 
-		// check if athlete record exists
 		athlete, err := db.SelectStravaAthleteById(pgxConn, resp.Athlete.Id)
 		if err != nil {
 			log.Println(err)
 		}
 
-		// create athlete record if not exist
 		if !athlete.Exists() {
 			if err := db.InsertStravaAthelete(
 				pgxConn,
@@ -93,7 +91,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Get access token from db
 	var stravaAuth db.StravaAuth
 
 	stravaAuth, err = db.SelectStravaAuth(pgxDB)
@@ -108,8 +105,6 @@ func main() {
 		Scope:        "activity:read_all",
 	}
 
-	// If access token does not exist get new access token data and save to db
-	// Save athlete data if not exists
 	if !stravaAuth.Exists() {
 		log.Println("Click to authorize on strava:", oauth.Url())
 		runServer(pgxDB, oauth)
@@ -119,17 +114,12 @@ func main() {
 			log.Fatalln("strava auth data not found.", err)
 		}
 	}
-	// use valid access token to fetch race activities from stava and save to db
-	h := map[string]string{"Authorization": "Bearer " + stravaAuth.AccessToken}
-	c := strava.NewClient(h)
 
-	// if expired use refresh token to new access token and save to db
 	if stravaAuth.IsExpired() {
-		log.Println("Access token is expired. Get a new one.")
+		log.Println("Access token is expired. Requesting a new one.")
 		tkResp, err := oauth.RefreshToken(stravaAuth.RefreshToken)
 		if err != nil {
-			log.Println(err)
-			return
+			log.Fatalln(err)
 		}
 		stravaAuth = db.StravaAuth{
 			AccessToken:  tkResp.AccessToken,
@@ -138,12 +128,14 @@ func main() {
 			AthleteId:    stravaAuth.AthleteId,
 		}
 		if err := db.UpdateStravaAuth(pgxDB, stravaAuth); err != nil {
-			log.Fatalln("Failed to update db table `strava_auth`. " + err.Error())
+			log.Fatalln(err)
 		}
 	}
 
+	stravaClient := strava.NewClient(stravaAuth.AccessToken)
+
 	page := uint16(1)
-	activities, err := strava.GetActivities(c, page, 30)
+	activities, err := strava.GetActivities(stravaClient, page, 30)
 	if err != nil {
 		log.Println(err)
 	}

@@ -7,8 +7,8 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	headers := make(map[string]string)
-	c := NewClient(headers)
+	token := "myToken"
+	c := NewClient(token)
 
 	expectedTimeout := 10 * time.Second
 	resultTimeout := c.httpclient.Timeout
@@ -16,33 +16,8 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("Incorrect client timeout value. Found(%d), Expected(%d)", resultTimeout, expectedTimeout)
 	}
 
-	expectedHeadersLen := len(headers)
-	resultHeadersLen := len(c.headers)
-	if resultHeadersLen != expectedHeadersLen {
-		t.Errorf("Incorrect client headers length. Found(%d), Expected(%d)", resultHeadersLen, expectedHeadersLen)
-	}
-}
-
-func TestNewClientWithHeaders(t *testing.T) {
-	headers := make(map[string]string)
-	headers["Authorization"] = "Bearer Token"
-	c := NewClient(headers)
-
-	expectedHeaderName := "Authorization"
-	val, ok := c.headers[expectedHeaderName]
-	if !ok {
-		t.Errorf("Expected header `%s` not found", expectedHeaderName)
-	}
-
-	expectedToken := "Bearer Token"
-	if val != expectedToken {
-		t.Errorf("Header `%s` has wrong value. Found(%s), Expected(%s)", expectedHeaderName, val, expectedToken)
-	}
-
-	expectedHeadersLen := len(headers)
-	resultHeadersLen := len(c.headers)
-	if resultHeadersLen != expectedHeadersLen {
-		t.Errorf("Incorrect client headers length. Found(%d), Expected(%d)", resultHeadersLen, expectedHeadersLen)
+	if c.accessToken != token {
+		t.Errorf("Incorrect access token. Found(%s), Expected(%s)", c.accessToken, token)
 	}
 }
 

@@ -53,16 +53,16 @@ type authTokenResp struct {
 }
 
 type Client struct {
-	httpclient http.Client
-	headers    map[string]string
+	httpclient  http.Client
+	accessToken string
 }
 
-func (c *Client) Get(url string) (*http.Response, error) {
+func (c *Client) Get(url string, headers map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range c.headers {
+	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
 	return c.Do(req)
@@ -79,10 +79,13 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func NewClient(headers map[string]string) *Client {
+// NewClient creates and returns a new Client
+// which contains an httpclient with a specified Timeout
+// and an accessToken for strava api requests
+func NewClient(t string) *Client {
 	return &Client{
-		httpclient: http.Client{Timeout: 10 * time.Second},
-		headers:    headers,
+		httpclient:  http.Client{Timeout: 10 * time.Second},
+		accessToken: t,
 	}
 }
 
@@ -176,7 +179,10 @@ func (a *Authorization) RefreshToken(refreshToken string) (authTokenResp, error)
 func GetActivity(c *Client, id uint64) (Activity, error) {
 	var activity Activity
 
-	resp, err := c.Get(fmt.Sprintf("%s/activities/%d", api_uri, id))
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", c.accessToken),
+	}
+	resp, err := c.Get(fmt.Sprintf("%s/activities/%d", api_uri, id), headers)
 	if err != nil {
 		return activity, err
 	}
@@ -196,7 +202,10 @@ func GetActivities(c *Client, page uint16, perPage uint8) ([]Activity, error) {
 	qs.Set("page", fmt.Sprintf("%d", page))
 	qs.Set("per_page", fmt.Sprintf("%d", perPage))
 
-	resp, err := c.Get(fmt.Sprintf("%s/activities?%s", api_uri, qs.Encode()))
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", c.accessToken),
+	}
+	resp, err := c.Get(fmt.Sprintf("%s/activities?%s", api_uri, qs.Encode()), headers)
 	if err != nil {
 		return activities, err
 	}
