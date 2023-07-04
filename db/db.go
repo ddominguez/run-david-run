@@ -104,3 +104,39 @@ func InsertStravaAthelete(pgxConn *PgxConn, a StravaAthlete) error {
 	}
 	return nil
 }
+
+type RaceActivity struct {
+	StravaId  uint64
+	AthleteId uint64
+	Name      string
+	NameSlug  string
+	Distance  float64
+	RaceDate  time.Time
+}
+
+func (r *RaceActivity) Exists() bool {
+	return r.StravaId > 0
+}
+
+// InsertRaceActivity inserts a new race_activity record
+func InsertRaceActivity(pgxConn *PgxConn, r RaceActivity) error {
+	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, name_slug, distance, race_date)`
+	_, err := pgxConn.Pool.Exec(context.Background(), q, r.StravaId, r.AthleteId, r.Name, r.NameSlug, r.Distance, r.RaceDate)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SelectRaceActivityById selects and returns a single race_activity record by strava_id
+func SelectRaceActivityById(pgxConn *PgxConn, stravaId uint64) (RaceActivity, error) {
+	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, race_date WHERE strava_id=$1`
+	var res RaceActivity
+	err := pgxConn.Pool.
+		QueryRow(context.Background(), q, stravaId).
+		Scan(&res.StravaId, &res.AthleteId, &res.Name, &res.NameSlug, &res.Distance, &res.RaceDate)
+	if err != nil {
+		return res, nil
+	}
+	return res, nil
+}

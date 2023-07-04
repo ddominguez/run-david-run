@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -33,11 +34,18 @@ type Activity struct {
 		Polyline        string `json:"polyline"`
 		SummaryPolyline string `json:"summary_polyline"`
 	} `json:"map"`
+	Athlete struct {
+		Id uint64 `json:"id"`
+	} `json:"athlete"`
 }
 
 // IsRace will return true for running race events
 func (a *Activity) IsRace() bool {
 	return a.SportType == "Run" && a.WorkoutType == 1
+}
+
+func (a *Activity) NameSlugified() string {
+	return strings.ToLower(strings.Join(strings.Split(a.Name, " "), "-"))
 }
 
 type Athlete struct {

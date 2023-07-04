@@ -141,7 +141,7 @@ func main() {
 	stravaClient := strava.NewClient(stravaAuth.AccessToken)
 
 	page := uint16(1)
-	activities, err := strava.GetActivities(stravaClient, page, 30)
+	activities, err := strava.GetActivities(stravaClient, page, 200)
 	if err != nil {
 		log.Println(err)
 	}
@@ -152,6 +152,13 @@ func main() {
 		if !a.IsRace() {
 			continue
 		}
-		log.Println(a.Id, a.Name)
+		log.Printf("%+v", db.RaceActivity{
+			StravaId:  a.Id,
+			Name:      a.Name,
+			NameSlug:  a.NameSlugified(),
+			Distance:  a.Distance,
+			RaceDate:  a.StartDateLocal,
+			AthleteId: a.Athlete.Id,
+		})
 	}
 }
