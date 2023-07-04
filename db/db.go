@@ -84,7 +84,7 @@ func (s *StravaAthlete) Exists() bool {
 
 // SelectStravaAthleteById selects and returns a single strava athlete record
 func SelectStravaAthleteById(pgxConn *PgxConn, athleteId uint64) (StravaAthlete, error) {
-	q := `SELECT strava_id, first_name, last_name, profile, profile_medium WHERE strava_id=$1`
+	q := `SELECT strava_id, first_name, last_name, profile, profile_medium FROM athlete WHERE strava_id=$1`
 	var res StravaAthlete
 	err := pgxConn.Pool.
 		QueryRow(context.Background(), q, athleteId).
@@ -111,7 +111,7 @@ type RaceActivity struct {
 	Name      string
 	NameSlug  string
 	Distance  float64
-	RaceDate  time.Time
+	StartDate time.Time
 }
 
 func (r *RaceActivity) Exists() bool {
@@ -120,8 +120,8 @@ func (r *RaceActivity) Exists() bool {
 
 // InsertRaceActivity inserts a new race_activity record
 func InsertRaceActivity(pgxConn *PgxConn, r RaceActivity) error {
-	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, name_slug, distance, race_date)`
-	_, err := pgxConn.Pool.Exec(context.Background(), q, r.StravaId, r.AthleteId, r.Name, r.NameSlug, r.Distance, r.RaceDate)
+	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, name_slug, distance, start_date_local) VALUES($1, $2, $3, $4, $5, $6)`
+	_, err := pgxConn.Pool.Exec(context.Background(), q, r.StravaId, r.AthleteId, r.Name, r.NameSlug, r.Distance, r.StartDate)
 	if err != nil {
 		return err
 	}
@@ -130,11 +130,11 @@ func InsertRaceActivity(pgxConn *PgxConn, r RaceActivity) error {
 
 // SelectRaceActivityById selects and returns a single race_activity record by strava_id
 func SelectRaceActivityById(pgxConn *PgxConn, stravaId uint64) (RaceActivity, error) {
-	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, race_date WHERE strava_id=$1`
+	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, start_date_local FROM race_activity WHERE strava_id=$1`
 	var res RaceActivity
 	err := pgxConn.Pool.
 		QueryRow(context.Background(), q, stravaId).
-		Scan(&res.StravaId, &res.AthleteId, &res.Name, &res.NameSlug, &res.Distance, &res.RaceDate)
+		Scan(&res.StravaId, &res.AthleteId, &res.Name, &res.NameSlug, &res.Distance, &res.StartDate)
 	if err != nil {
 		return res, nil
 	}
