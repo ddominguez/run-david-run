@@ -13,7 +13,6 @@ CREATE TABLE race_activity (
     name varchar(100) NOT NULL,
     name_slug varchar(150),
     distance float DEFAULT 0.0,
-    race_type varchar(25) NOT NULL,
     race_date timestamp with time zone NOT NULL
 );
 CREATE INDEX name_slug_idx ON race_activity (name_slug);
