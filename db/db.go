@@ -51,9 +51,9 @@ func SelectStravaAuth(pgxConn *PgxConn) (StravaAuth, error) {
 }
 
 // InsertStravaAuth inserts a new strava_auth record
-func InsertStravaAuth(pgxConn *PgxConn, accessToken, refreshToken string, expiresAt, athleteId uint64) error {
+func InsertStravaAuth(pgxConn *PgxConn, a StravaAuth) error {
 	q := `INSERT INTO strava_auth(access_token, access_token_expires_at, refresh_token, athlete_id) VALUES ($1, $2, $3, $4)`
-	_, err := pgxConn.Pool.Exec(context.Background(), q, accessToken, expiresAt, refreshToken, athleteId)
+	_, err := pgxConn.Pool.Exec(context.Background(), q, a.AccessToken, a.ExpiresAt, a.RefreshToken, a.AthleteId)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func UpdateStravaAuth(pgxConn *PgxConn, sa StravaAuth) error {
 
 // StravaAthlete represent db table `athlete`
 type StravaAthlete struct {
-	Id            uint64
+	StravaId      uint64
 	FirstName     string
 	LastName      string
 	Profile       string
@@ -79,7 +79,7 @@ type StravaAthlete struct {
 }
 
 func (s *StravaAthlete) Exists() bool {
-	return s.Id > 0
+	return s.StravaId > 0
 }
 
 // SelectStravaAthleteById selects and returns a single strava athlete record
@@ -88,7 +88,7 @@ func SelectStravaAthleteById(pgxConn *PgxConn, athleteId uint64) (StravaAthlete,
 	var res StravaAthlete
 	err := pgxConn.Pool.
 		QueryRow(context.Background(), q, athleteId).
-		Scan(&res.Id, &res.FirstName, &res.LastName, &res.Profile, &res.ProfileMedium)
+		Scan(&res.StravaId, &res.FirstName, &res.LastName, &res.Profile, &res.ProfileMedium)
 	if err != nil {
 		return res, nil
 	}
@@ -96,9 +96,9 @@ func SelectStravaAthleteById(pgxConn *PgxConn, athleteId uint64) (StravaAthlete,
 }
 
 // InsertStravaAthelete inserts a new strava athlete record
-func InsertStravaAthelete(pgxConn *PgxConn, id uint64, fname, lname, profile, profileMed string) error {
+func InsertStravaAthelete(pgxConn *PgxConn, a StravaAthlete) error {
 	q := `INSERT INTO athlete(strava_id, first_name, last_name, profile, profile_medium) VALUES($1, $2, $3, $4, $5)`
-	_, err := pgxConn.Pool.Exec(context.Background(), q, id, fname, lname, profile, profileMed)
+	_, err := pgxConn.Pool.Exec(context.Background(), q, a.StravaId, a.FirstName, a.LastName, a.Profile, a.ProfileMedium)
 	if err != nil {
 		return err
 	}

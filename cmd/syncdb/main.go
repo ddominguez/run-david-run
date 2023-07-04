@@ -37,12 +37,13 @@ func runServer(pgxConn *db.PgxConn, auth strava.Authorization) {
 			http.Error(w, "bad request.", http.StatusBadRequest)
 			return
 		}
-		if err := db.InsertStravaAuth(
-			pgxConn,
-			resp.AccessToken,
-			resp.RefreshToken,
-			resp.ExpiresAt,
-			resp.Athlete.Id); err != nil {
+
+		if err := db.InsertStravaAuth(pgxConn, db.StravaAuth{
+			AccessToken:  resp.AccessToken,
+			RefreshToken: resp.RefreshToken,
+			ExpiresAt:    resp.ExpiresAt,
+			AthleteId:    resp.Athlete.Id,
+		}); err != nil {
 			log.Println(err)
 		}
 
@@ -52,13 +53,13 @@ func runServer(pgxConn *db.PgxConn, auth strava.Authorization) {
 		}
 
 		if !athlete.Exists() {
-			if err := db.InsertStravaAthelete(
-				pgxConn,
-				resp.Athlete.Id,
-				resp.Athlete.FirstName,
-				resp.Athlete.LastName,
-				resp.Athlete.Profile,
-				resp.Athlete.ProfileMedium); err != nil {
+			if err := db.InsertStravaAthelete(pgxConn, db.StravaAthlete{
+				StravaId:      resp.Athlete.Id,
+				FirstName:     resp.Athlete.FirstName,
+				LastName:      resp.Athlete.LastName,
+				Profile:       resp.Athlete.Profile,
+				ProfileMedium: resp.Athlete.ProfileMedium,
+			}); err != nil {
 				log.Println(err)
 			}
 		}
@@ -80,7 +81,12 @@ func runServer(pgxConn *db.PgxConn, auth strava.Authorization) {
 }
 
 func main() {
-	dbUrl := fmt.Sprintf("postgres://%s:%s@localhost:5432/%s", os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
+	dbUrl := fmt.Sprintf(
+		"postgres://%s:%s@localhost:5432/%s",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+	)
 	pgxDB, err := db.NewPgxConn(dbUrl)
 	if err != nil {
 		log.Fatalln(err)

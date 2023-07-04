@@ -8,15 +8,15 @@ CREATE TABLE strava_auth (
 );
 
 CREATE TABLE race_activity (
-    strava_id integer NOT NULL,
+    strava_id integer NOT NULL PRIMARY KEY,
     strava_athlete_id integer NOT NULL,
     name varchar(100) NOT NULL,
-    name_slug varchar(150) PRIMARY KEY,
+    name_slug varchar(150),
     distance float DEFAULT 0.0,
     race_type varchar(25) NOT NULL,
     race_date timestamp with time zone NOT NULL
 );
-CREATE INDEX strava_activity_id_idx ON race_activity (strava_id);
+CREATE INDEX name_slug_idx ON race_activity (name_slug);
 
 CREATE TABLE athlete (
     strava_id integer PRIMARY KEY,
