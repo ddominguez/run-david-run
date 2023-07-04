@@ -152,13 +152,26 @@ func main() {
 		if !a.IsRace() {
 			continue
 		}
-		log.Printf("%+v", db.RaceActivity{
+		ra, err := db.SelectRaceActivityById(pgxDB, a.Id)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if ra.Exists() {
+			log.Printf("strava activity id %d already exists\n", a.Id)
+			continue
+		}
+
+		if err := db.InsertRaceActivity(pgxDB, db.RaceActivity{
 			StravaId:  a.Id,
 			Name:      a.Name,
 			NameSlug:  a.NameSlugified(),
 			Distance:  a.Distance,
-			RaceDate:  a.StartDateLocal,
+			StartDate: a.StartDateLocal,
 			AthleteId: a.Athlete.Id,
-		})
+		}); err != nil {
+			log.Fatalln(err)
+		}
+		log.Printf("strava id: %d, race name: %s \n", a.Id, a.Name)
 	}
 }
