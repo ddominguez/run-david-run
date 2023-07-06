@@ -141,37 +141,41 @@ func main() {
 	stravaClient := strava.NewClient(stravaAuth.AccessToken)
 
 	page := uint16(1)
-	activities, err := strava.GetActivities(stravaClient, page, 200)
-	if err != nil {
-		log.Println(err)
-	}
-	if len(activities) == 0 {
-		log.Println("No more activities")
-	}
-	for _, a := range activities {
-		if !a.IsRace() {
-			continue
-		}
-		ra, err := db.SelectRaceActivityById(pgxDB, a.Id)
+	for {
+		activities, err := strava.GetActivities(stravaClient, page, 200)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
+		if len(activities) == 0 {
+			log.Println("No more activities")
+			break
+		}
+		for _, a := range activities {
+			if !a.IsRace() {
+				continue
+			}
+			ra, err := db.SelectRaceActivityById(pgxDB, a.Id)
+			if err != nil {
+				log.Fatalln(err)
+			}
 
-		if ra.Exists() {
-			log.Printf("strava activity id %d already exists\n", a.Id)
-			continue
-		}
+			if ra.Exists() {
+				log.Printf("strava activity id %d already exists\n", a.Id)
+				continue
+			}
 
-		if err := db.InsertRaceActivity(pgxDB, db.RaceActivity{
-			StravaId:  a.Id,
-			Name:      a.Name,
-			NameSlug:  a.NameSlugified(),
-			Distance:  a.Distance,
-			StartDate: a.StartDateLocal,
-			AthleteId: a.Athlete.Id,
-		}); err != nil {
-			log.Fatalln(err)
+			if err := db.InsertRaceActivity(pgxDB, db.RaceActivity{
+				StravaId:  a.Id,
+				Name:      a.Name,
+				NameSlug:  a.NameSlugified(),
+				Distance:  a.Distance,
+				StartDate: a.StartDateLocal,
+				AthleteId: a.Athlete.Id,
+			}); err != nil {
+				log.Fatalln(err)
+			}
+			log.Printf("strava id: %d, race name: %s \n", a.Id, a.Name)
 		}
-		log.Printf("strava id: %d, race name: %s \n", a.Id, a.Name)
+		page += 1
 	}
 }
