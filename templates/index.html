@@ -1,3 +1,12 @@
 {{define "content"}}
-    Home page and a list of recent races.
+{{- $year := 0 }}
+{{- range .Activities }}
+{{- if ne $year .StartDate.Year -}}
+{{ $year = .StartDate.Year }}
+<h2>{{$year}}</h2>
+{{- end}}
+<div>{{.Name}}</div>
+{{- else }}
+<div>There are no race activities.</div>
+{{- end}}
 {{end}}

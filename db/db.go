@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -121,10 +122,12 @@ func (r *RaceActivity) Exists() bool {
 // InsertRaceActivity inserts a new race_activity record
 func InsertRaceActivity(pgxConn *PgxConn, r RaceActivity) error {
 	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, name_slug, distance, start_date_local) VALUES($1, $2, $3, $4, $5, $6)`
+
 	_, err := pgxConn.Pool.Exec(context.Background(), q, r.StravaId, r.AthleteId, r.Name, r.NameSlug, r.Distance, r.StartDate)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -132,11 +135,39 @@ func InsertRaceActivity(pgxConn *PgxConn, r RaceActivity) error {
 func SelectRaceActivityById(pgxConn *PgxConn, stravaId uint64) (RaceActivity, error) {
 	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, start_date_local FROM race_activity WHERE strava_id=$1`
 	var res RaceActivity
+
 	err := pgxConn.Pool.
 		QueryRow(context.Background(), q, stravaId).
 		Scan(&res.StravaId, &res.AthleteId, &res.Name, &res.NameSlug, &res.Distance, &res.StartDate)
 	if err != nil {
 		return res, nil
 	}
+
+	return res, nil
+}
+
+func SelectAllRaces(pgxConn *PgxConn) ([]RaceActivity, error) {
+	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, start_date_local FROM race_activity ORDER BY start_date_local DESC`
+	var res []RaceActivity
+
+	rows, err := pgxConn.Pool.Query(context.Background(), q)
+	if err != nil {
+		return res, fmt.Errorf("Failed to execute SelectAllRaces query: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var r RaceActivity
+		err := rows.Scan(&r.StravaId, &r.AthleteId, &r.Name, &r.NameSlug, &r.Distance, &r.StartDate)
+		if err != nil {
+			return res, fmt.Errorf("Error scanning race activity rows: %w", err)
+		}
+		res = append(res, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		return res, err
+	}
+
 	return res, nil
 }
