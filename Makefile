@@ -1,5 +1,16 @@
+BUILD_DIR=./build
 MIGRATIONS_DIR=./migrations
 DB_CONNECTION=postgres postgres://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
+
+run: clean
+	env GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/main main.go
+	$(BUILD_DIR)/main
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+test:
+	go test ./...
 
 db-start:
 	docker compose up db
