@@ -9,6 +9,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/ddominguez/run-david-run/db"
 )
@@ -18,11 +21,7 @@ var pgxDB *db.PgxConn
 //go:embed dist/*.css
 var distFiles embed.FS
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
+func handleRaces(w http.ResponseWriter, r *http.Request) {
 	activities, err := db.SelectAllRaces(pgxDB)
 	if err != nil {
 		log.Println(err)
@@ -45,6 +44,51 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
+}
+func handleRaceDetails(w http.ResponseWriter, r *http.Request) {
+	params := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	fmt.Fprint(w, fmt.Sprintf("Year: %s, Slug: %s", params[0], params[1]))
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	valid := validReqPath(r.URL.Path)
+	if !valid {
+		http.NotFound(w, r)
+		return
+	}
+
+	if r.URL.Path == "/" {
+		handleRaces(w, r)
+		return
+	}
+
+	handleRaceDetails(w, r)
+}
+
+func validReqPath(path string) bool {
+	if path == "/" {
+		return true
+	}
+
+	params := strings.Split(strings.Trim(path, "/"), "/")
+	if len(params) != 2 {
+		return false
+	}
+
+	y, err := strconv.Atoi(params[0])
+	if err != nil {
+		return false
+	}
+
+	// First race was in 2014
+	minY := 2014
+	t := time.Date(y, time.January, 1, 0, 0, 0, 0, time.UTC)
+	if t.Year() < minY || t.Year() > time.Now().Year() {
+		return false
+	}
+
+	return true
 }
 
 func main() {
