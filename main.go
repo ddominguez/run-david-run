@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +14,9 @@ import (
 )
 
 var pgxDB *db.PgxConn
+
+//go:embed dist/*.css
+var distFiles embed.FS
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -58,6 +63,12 @@ func main() {
 	if err := pgxDB.Pool.Ping(context.Background()); err != nil {
 		log.Fatalln(err)
 	}
+
+	static, err := fs.Sub(distFiles, "dist")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(static))))
 
 	http.HandleFunc("/", handleIndex)
 	fmt.Println("Listening on http://localhost:8080")
