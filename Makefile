@@ -30,3 +30,6 @@ migrate-reset:
 # -- make migrate-create NAME=migration_name
 migrate-create:
 	goose -dir $(MIGRATIONS_DIR) $(DB_CONNECTION) create $(NAME) sql
+
+watch-tw:
+	tailwindcss -i ./css/input.css -o ./dist/styles.css --watch
