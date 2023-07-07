@@ -3,9 +3,9 @@
 {{- range .Activities }}
 {{- if ne $year .StartDate.Year -}}
 {{ $year = .StartDate.Year }}
-<h2>{{$year}}</h2>
+<h2 class="text-xl">{{$year}}</h2>
 {{- end}}
-<div>{{.Name}}</div>
+<div class="my-2"><a class="hover:bg-amber-300 underline" href="/{{$year}}/{{.NameSlug}}">{{.Name}}</a></div>
 {{- else }}
 <div>There are no race activities.</div>
 {{- end}}
