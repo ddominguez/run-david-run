@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -44,8 +45,10 @@ func (a *Activity) IsRace() bool {
 	return a.SportType == "Run" && a.WorkoutType == 1
 }
 
+var re = regexp.MustCompile("[^a-z0-9]+")
+
 func (a *Activity) NameSlugified() string {
-	return strings.ToLower(strings.Join(strings.Split(a.Name, " "), "-"))
+	return strings.Trim(re.ReplaceAllString(strings.ToLower(a.Name), "-"), "-")
 }
 
 type Athlete struct {

@@ -59,3 +59,21 @@ func TestAuthorizationUrl(t *testing.T) {
 		}
 	}
 }
+
+func TestNameSlugified(t *testing.T) {
+	testCases := []struct {
+		input    Activity
+		expected string
+	}{
+		{Activity{Id: 1, Name: "NYC Marathon"}, "nyc-marathon"},
+		{Activity{Id: 2, Name: "Test 5 & 10 Miler"}, "test-5-10-miler"},
+		{Activity{Id: 3, Name: "St. Dave 10k"}, "st-dave-10k"},
+	}
+
+	for _, tc := range testCases {
+		slug := tc.input.NameSlugified()
+		if slug != tc.expected {
+			t.Errorf("NameSlugified() has unexpected value. Found(%s), Expected(%s)", slug, tc.expected)
+		}
+	}
+}
