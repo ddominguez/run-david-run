@@ -13,7 +13,7 @@ test:
 	go test ./...
 
 db-start:
-	docker compose up db
+	docker compose up -d db
 
 db-shell:
 	docker compose exec db psql -d ${DB_NAME} -h localhost -U ${DB_USER}
