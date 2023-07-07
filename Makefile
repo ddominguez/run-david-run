@@ -2,10 +2,10 @@ BUILD_DIR=./build
 MIGRATIONS_DIR=./migrations
 DB_CONNECTION=postgres postgres://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
 
-run:
+run: tw-build
 	go run main.go
 
-build: clean
+build: clean tw-build
 	env GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/main main.go
 
 clean:
@@ -33,5 +33,8 @@ migrate-reset:
 migrate-create:
 	goose -dir $(MIGRATIONS_DIR) $(DB_CONNECTION) create $(NAME) sql
 
-watch-tw:
+tw-build:
+	tailwindcss -i ./css/input.css -o ./dist/styles.css --minify
+
+tw-watch:
 	tailwindcss -i ./css/input.css -o ./dist/styles.css --watch
