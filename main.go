@@ -44,11 +44,39 @@ func handleRaces(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-
 }
+
 func handleRaceDetails(w http.ResponseWriter, r *http.Request) {
-	params := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	fmt.Fprint(w, fmt.Sprintf("Year: %s, Slug: %s", params[0], params[1]))
+	pv, err := getPathValues(r.URL.Path)
+	if err != nil {
+		log.Println(err)
+		http.NotFound(w, r)
+		return
+	}
+
+	activity, err := db.SelectRaceByYearAndSlug(pgxDB, pv.year, pv.slug)
+	if err != nil {
+		log.Println(err)
+		http.NotFound(w, r)
+		return
+	}
+
+	data := struct {
+		Activity db.RaceActivity
+	}{
+		Activity: activity,
+	}
+	tmplFiles := []string{
+		"./templates/base.html",
+		"./templates/race.html",
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	tmpl := template.Must(template.ParseFiles(tmplFiles...))
+	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+		log.Println("failed to execute to templates", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -66,24 +94,43 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	handleRaceDetails(w, r)
 }
 
+type racePath struct {
+	year int
+	slug string
+}
+
+func getPathValues(path string) (racePath, error) {
+	var res racePath
+	params := strings.Split(strings.Trim(path, "/"), "/")
+	if len(params) != 2 {
+		return res, fmt.Errorf("Invalid values in request path")
+	}
+
+	y, err := strconv.Atoi(params[0])
+	if err != nil {
+		return res, fmt.Errorf("Request contains invalid year")
+	}
+
+	res.year = y
+	res.slug = params[1]
+
+	return res, nil
+}
+
 func validReqPath(path string) bool {
 	if path == "/" {
 		return true
 	}
 
-	params := strings.Split(strings.Trim(path, "/"), "/")
-	if len(params) != 2 {
-		return false
-	}
-
-	y, err := strconv.Atoi(params[0])
+	pv, err := getPathValues(path)
 	if err != nil {
+		log.Println(err)
 		return false
 	}
 
 	// First race was in 2014
 	minY := 2014
-	t := time.Date(y, time.January, 1, 0, 0, 0, 0, time.UTC)
+	t := time.Date(pv.year, time.January, 1, 0, 0, 0, 0, time.UTC)
 	if t.Year() < minY || t.Year() > time.Now().Year() {
 		return false
 	}

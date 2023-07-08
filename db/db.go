@@ -171,3 +171,19 @@ func SelectAllRaces(pgxConn *PgxConn) ([]RaceActivity, error) {
 
 	return res, nil
 }
+
+func SelectRaceByYearAndSlug(pgxConn *PgxConn, year int, slug string) (RaceActivity, error) {
+	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, start_date_local
+    FROM race_activity
+    WHERE name_slug=$1 and EXTRACT(year FROM "start_date_local")=$2`
+	var res RaceActivity
+
+	err := pgxConn.Pool.
+		QueryRow(context.Background(), q, slug, year).
+		Scan(&res.StravaId, &res.AthleteId, &res.Name, &res.NameSlug, &res.Distance, &res.StartDate)
+	if err != nil {
+		return res, fmt.Errorf("Failed to select race activity by year and slug: %s", err)
+	}
+
+	return res, nil
+}
