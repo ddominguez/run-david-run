@@ -19,7 +19,10 @@ import (
 var pgxDB *db.PgxConn
 
 //go:embed dist/*.css
-var distFiles embed.FS
+var distFS embed.FS
+
+//go:embed templates/*.html
+var tmplFS embed.FS
 
 func handleRaces(w http.ResponseWriter, r *http.Request) {
 	activities, err := db.SelectAllRaces(pgxDB)
@@ -34,11 +37,11 @@ func handleRaces(w http.ResponseWriter, r *http.Request) {
 		Activities: activities,
 	}
 	tmplFiles := []string{
-		"./templates/base.html",
-		"./templates/index.html",
+		"templates/base.html",
+		"templates/index.html",
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl := template.Must(template.ParseFiles(tmplFiles...))
+	tmpl := template.Must(template.ParseFS(tmplFS, tmplFiles...))
 	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
 		log.Println("failed to execute to templates", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -67,11 +70,11 @@ func handleRaceDetails(w http.ResponseWriter, r *http.Request) {
 		Activity: activity,
 	}
 	tmplFiles := []string{
-		"./templates/base.html",
-		"./templates/race.html",
+		"templates/base.html",
+		"templates/race.html",
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl := template.Must(template.ParseFiles(tmplFiles...))
+	tmpl := template.Must(template.ParseFS(tmplFS, tmplFiles...))
 	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
 		log.Println("failed to execute to templates", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -155,7 +158,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	static, err := fs.Sub(distFiles, "dist")
+	static, err := fs.Sub(distFS, "dist")
 	if err != nil {
 		log.Fatalln(err)
 	}
