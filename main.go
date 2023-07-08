@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ddominguez/run-david-run/db"
+	"github.com/ddominguez/run-david-run/strava"
 )
 
 var pgxDB *db.PgxConn
@@ -23,6 +24,41 @@ var distFS embed.FS
 
 //go:embed templates/*.html
 var tmplFS embed.FS
+
+var oauth = strava.Authorization{
+	ClientId:     os.Getenv("STRAVA_CLIENT_ID"),
+	ClientSecret: os.Getenv("STRAVA_CLIENT_SECRET"),
+	RedirectUri:  "http://localhost:8080/callback",
+	Scope:        "activity:read_all",
+}
+
+func getAccessToken() (string, error) {
+	stravaAuth, err := db.SelectStravaAuth(pgxDB)
+	if err != nil {
+		log.Println("strava auth data not found.", err)
+		return "", err
+	}
+
+	if stravaAuth.IsExpired() {
+		log.Println("Access token is expired. Requesting a new one.")
+		tkResp, err := oauth.RefreshToken(stravaAuth.RefreshToken)
+		if err != nil {
+			log.Println(err)
+			return "", err
+		}
+		stravaAuth = db.StravaAuth{
+			AccessToken:  tkResp.AccessToken,
+			ExpiresAt:    tkResp.ExpiresAt,
+			RefreshToken: tkResp.RefreshToken,
+			AthleteId:    stravaAuth.AthleteId,
+		}
+		if err := db.UpdateStravaAuth(pgxDB, stravaAuth); err != nil {
+			log.Println(err)
+			return "", err
+		}
+	}
+	return stravaAuth.AccessToken, nil
+}
 
 func handleRaces(w http.ResponseWriter, r *http.Request) {
 	activities, err := db.SelectAllRaces(pgxDB)
@@ -64,10 +100,25 @@ func handleRaceDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := getAccessToken()
+	if err != nil {
+		log.Println("failed to get access token", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	stravaClient := strava.NewClient(token)
+	sa, err := strava.GetActivity(stravaClient, activity.StravaId)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
 	data := struct {
-		Activity db.RaceActivity
+		Activity strava.Activity
 	}{
-		Activity: activity,
+		Activity: sa,
 	}
 	tmplFiles := []string{
 		"templates/base.html",
