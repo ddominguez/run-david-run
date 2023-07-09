@@ -116,9 +116,11 @@ func handleRaceDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Activity strava.Activity
+		Activity  strava.Activity
+		MapboxURL string
 	}{
-		Activity: sa,
+		Activity:  sa,
+		MapboxURL: sa.MapboxURL(),
 	}
 	tmplFiles := []string{
 		"templates/base.html",

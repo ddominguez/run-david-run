@@ -1,3 +1,9 @@
 {{define "content"}}
+<div class="mb-3"><a href="/" class="underline">&larr; back to list</a></div>
 <h1 class="text-2xl">{{.Activity.Name}}</h1>
+{{- if .MapboxURL }}
+<div>
+    <img src={{.MapboxURL}} />
+</div>
+{{- end }}
 {{end}}
