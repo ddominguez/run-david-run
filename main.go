@@ -117,10 +117,18 @@ func handleRaceDetails(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Activity  strava.Activity
+		DateTime  string
+		Distance  string
 		MapboxURL string
+		Pace      string
+		Time      string
 	}{
 		Activity:  sa,
+		DateTime:  sa.StartDateLocal.Format(time.RFC1123),
+		Distance:  sa.DistanceInMiles(),
 		MapboxURL: sa.MapboxURL(),
+		Pace:      sa.Pace(),
+		Time:      sa.TimeFormatted(),
 	}
 	tmplFiles := []string{
 		"templates/base.html",

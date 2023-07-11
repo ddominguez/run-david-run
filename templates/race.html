@@ -1,6 +1,21 @@
 {{define "content"}}
 <div class="mb-3"><a href="/" class="underline">&larr; back to list</a></div>
-<h1 class="text-2xl">{{.Activity.Name}}</h1>
+<div>{{.DateTime}}</div>
+<h1 class="text-2xl font-bold">{{.Activity.Name}}</h1>
+<div class="my-5 flex gap-2">
+    <div>
+        <span class="block">Distance</span>
+        <span class="font-bold text-xl">{{.Distance}}</span>
+    </div>
+    <div class="pl-2 border-l">
+        <span class="block">Pace</span>
+        <span class="font-bold text-xl">{{.Pace}}</span>
+    </div>
+    <div class="pl-2 border-l">
+        <span class="block">Time</span>
+        <span class="font-bold text-xl">{{.Time}}</span>
+    </div>
+</div>
 {{- if .MapboxURL }}
 <div>
     <img src={{.MapboxURL}} />

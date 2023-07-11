@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -24,11 +25,7 @@ type Activity struct {
 	ElapsedTime    int       `json:"elapsed_time"`
 	SportType      string    `json:"sport_type"`
 	WorkoutType    uint8     `json:"workout_type"`
-	StartDate      time.Time `json:"start_date"`
 	StartDateLocal time.Time `json:"start_date_local"`
-	TimeZone       string    `json:"time_zone"`
-	Country        string    `json:"location_country"`
-	PhotoCount     int       `json:"photo_count"`
 	Map            struct {
 		Id              string `json:"id"`
 		Polyline        string `json:"polyline"`
@@ -37,6 +34,28 @@ type Activity struct {
 	Athlete struct {
 		Id uint64 `json:"id"`
 	} `json:"athlete"`
+}
+
+func (a *Activity) DistanceInMiles() string {
+	d := a.Distance * 0.000621371
+	return fmt.Sprintf("%0.2f mi", d)
+}
+
+func (a *Activity) Pace() string {
+	miles := a.Distance * 0.000621371
+	minutes := math.Floor(float64(a.ElapsedTime / 60))
+	pace := minutes / miles
+	paceMinutes := math.Floor(pace)
+	paceSeconds := math.Round((pace - paceMinutes) * 60)
+	return fmt.Sprintf("%d:%02d /mi", int(paceMinutes), int(paceSeconds))
+}
+
+func (a *Activity) TimeFormatted() string {
+	hours := a.ElapsedTime / 3600
+	remainingSeconds := a.ElapsedTime % 3600
+	minutes := remainingSeconds / 60
+	seconds := remainingSeconds % 60
+	return fmt.Sprintf("%d:%02d:%02d", hours, minutes, seconds)
 }
 
 // IsRace will return true for running race events
