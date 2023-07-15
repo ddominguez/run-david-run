@@ -1,6 +1,6 @@
 BUILD_DIR=./build
 MIGRATIONS_DIR=./migrations
-DB_CONNECTION=postgres postgres://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
+DB_CONNECTION=postgres postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 
 run: tw-build
 	go run main.go
