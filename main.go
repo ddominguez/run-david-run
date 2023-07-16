@@ -228,6 +228,10 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(static))))
 
 	http.HandleFunc("/", handleIndex)
-	fmt.Println("Listening on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	port, ok := os.LookupEnv("PORT")
+	if !ok {
+		log.Fatalln("Missing PORT env var value")
+	}
+	fmt.Printf("Listening on http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
