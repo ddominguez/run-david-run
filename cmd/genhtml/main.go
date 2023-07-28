@@ -13,6 +13,21 @@ import (
 	"github.com/ddominguez/run-david-run/strava"
 )
 
+type raceDetails struct {
+	Name      string
+	DateTime  string
+	Distance  string
+	MapboxURL string
+	Pace      string
+	Time      string
+}
+
+type indexDetails struct {
+	Name     string
+	NameSlug string
+	RaceYear int
+}
+
 var projectName = "run-david-run"
 var distDir = "dist"
 
@@ -27,6 +42,47 @@ func currWd() (string, error) {
 	}
 
 	return wd, nil
+}
+
+func getStravaAuth(pgxDB *db.PgxConn) (db.StravaAuth, error) {
+	stravaAuth, err := db.SelectStravaAuth(pgxDB)
+	if err != nil {
+		log.Println("strava auth data not found.", err)
+	}
+
+	oauth := strava.Authorization{
+		ClientId:     os.Getenv("STRAVA_CLIENT_ID"),
+		ClientSecret: os.Getenv("STRAVA_CLIENT_SECRET"),
+		RedirectUri:  "http://localhost:8080/callback",
+		Scope:        "activity:read_all",
+	}
+
+	if stravaAuth.IsExpired() {
+		log.Println("Access token is expired. Requesting a new one.")
+		tkResp, err := oauth.RefreshToken(stravaAuth.RefreshToken)
+		if err != nil {
+			return stravaAuth, err
+		}
+		stravaAuth = db.StravaAuth{
+			AccessToken:  tkResp.AccessToken,
+			ExpiresAt:    tkResp.ExpiresAt,
+			RefreshToken: tkResp.RefreshToken,
+			AthleteId:    stravaAuth.AthleteId,
+		}
+		if err := db.UpdateStravaAuth(pgxDB, stravaAuth); err != nil {
+			return stravaAuth, err
+		}
+	}
+
+	return stravaAuth, nil
+}
+
+func parsedTmpls(wd string, tmplFiles []string) *template.Template {
+	var files []string
+	for i := range tmplFiles {
+		files = append(files, path.Join(wd, tmplFiles[i]))
+	}
+	return template.Must(template.New("base").ParseFiles(files...))
 }
 
 func main() {
@@ -54,50 +110,15 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	var stravaAuth db.StravaAuth
-
-	stravaAuth, err = db.SelectStravaAuth(pgxDB)
+	stravaAuth, err := getStravaAuth(pgxDB)
 	if err != nil {
-		log.Println("strava auth data not found.", err)
+		log.Fatalln(err)
 	}
 
-	oauth := strava.Authorization{
-		ClientId:     os.Getenv("STRAVA_CLIENT_ID"),
-		ClientSecret: os.Getenv("STRAVA_CLIENT_SECRET"),
-		RedirectUri:  "http://localhost:8080/callback",
-		Scope:        "activity:read_all",
-	}
+	raceTmpl := parsedTmpls(workingDir, []string{"templates/base.html", "templates/race.html"})
+	indexTmpl := parsedTmpls(workingDir, []string{"templates/base.html", "templates/index.html"})
 
-	if stravaAuth.IsExpired() {
-		log.Println("Access token is expired. Requesting a new one.")
-		tkResp, err := oauth.RefreshToken(stravaAuth.RefreshToken)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		stravaAuth = db.StravaAuth{
-			AccessToken:  tkResp.AccessToken,
-			ExpiresAt:    tkResp.ExpiresAt,
-			RefreshToken: tkResp.RefreshToken,
-			AthleteId:    stravaAuth.AthleteId,
-		}
-		if err := db.UpdateStravaAuth(pgxDB, stravaAuth); err != nil {
-			log.Fatalln(err)
-		}
-	}
-
-	raceTmplFiles := []string{
-		path.Join(workingDir, "templates/base.html"),
-		path.Join(workingDir, "templates/race.html"),
-	}
-	raceTmpl := template.Must(template.New("base").ParseFiles(raceTmplFiles...))
-
-	indexTmplFiles := []string{
-		path.Join(workingDir, "templates/base.html"),
-		path.Join(workingDir, "templates/index.html"),
-	}
-	indexTmpl := template.Must(template.New("base").ParseFiles(indexTmplFiles...))
-
-	var races []strava.Activity
+	var races []indexDetails
 
 	stravaClient := strava.NewClient(stravaAuth.AccessToken)
 	for page := 1; true; page++ {
@@ -114,9 +135,12 @@ func main() {
 				continue
 			}
 
-			// gather activities into slice
-			a.NameSlug = a.NameSlugified()
-			races = append(races, a)
+			// save race activities for index
+			races = append(races, indexDetails{
+				Name:     a.Name,
+				NameSlug: a.NameSlugified(),
+				RaceYear: a.StartDateLocal.Year(),
+			})
 
 			// build race activity template
 			activityFilePath := path.Join(fmt.Sprintf("%d", a.StartDateLocal.Year()), a.NameSlugified(), "index.html")
@@ -130,15 +154,8 @@ func main() {
 				log.Fatalln(err)
 			}
 
-			data := struct {
-				Activity  strava.Activity
-				DateTime  string
-				Distance  string
-				MapboxURL string
-				Pace      string
-				Time      string
-			}{
-				Activity:  a,
+			data := raceDetails{
+				Name:      a.Name,
 				DateTime:  a.StartDateLocal.Format(time.RFC1123),
 				Distance:  a.DistanceInMiles(),
 				MapboxURL: a.MapboxURL(),
@@ -153,14 +170,11 @@ func main() {
 			log.Printf("created %s", activityFilePath)
 		}
 
-		if page == 1 {
-			break
-		}
 	}
 
 	// build index file
 	data := struct {
-		Activities []strava.Activity
+		Activities []indexDetails
 	}{
 		Activities: races,
 	}
