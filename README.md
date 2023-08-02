@@ -1,3 +1,4 @@
 # Run, David, Run!
 
-A web app that will display all the running events that I have completed.
+A program that will generate html files of all the running events that I have participated in so far.
+
