@@ -172,7 +172,7 @@ func main() {
 				NameSlug:  a.NameSlugified(),
 				Distance:  a.Distance,
 				StartDate: a.StartDateLocal,
-				AthleteId: a.Athlete.Id,
+                AthleteId: 0, // TODO: removed from strava.activity. Redo all this.
 			}); err != nil {
 				log.Fatalln(err)
 			}

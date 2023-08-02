@@ -28,12 +28,10 @@ type Activity struct {
 	StartDateLocal time.Time `json:"start_date_local"`
 	Map            struct {
 		Id              string `json:"id"`
-		Polyline        string `json:"polyline"`
 		SummaryPolyline string `json:"summary_polyline"`
 	} `json:"map"`
-	Athlete struct {
-		Id uint64 `json:"id"`
-	} `json:"athlete"`
+
+	NameSlug string
 }
 
 func (a *Activity) DistanceInMiles() string {
