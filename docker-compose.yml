@@ -1,9 +1,4 @@
 services:
-  # web:
-  #   build: .
-  #   ports:
-  #     - "8080:8080"
-  #   command: ["/app/main"]
   db:
     image: postgres:15.3-alpine
     volumes:
