@@ -1,32 +1,21 @@
 package db
 
 import (
-	"context"
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type PgxConn struct {
-	Pool *pgxpool.Pool
-}
-
-// NewPgxConn creates and returns a new pool connection
-func NewPgxConn(dbUrl string) (*PgxConn, error) {
-	pool, err := pgxpool.New(context.Background(), dbUrl)
-	if err != nil {
-		return nil, err
-	}
-	return &PgxConn{Pool: pool}, nil
-}
+var db = sqlx.MustConnect("sqlite3", "strava.db")
 
 // StravaAuth represents db table `strava_auth`
 type StravaAuth struct {
-	AccessToken  string
-	ExpiresAt    uint64
-	RefreshToken string
-	AthleteId    uint64
+	AccessToken  string `db:"access_token"`
+	ExpiresAt    uint64 `db:"access_token_expires_at"`
+	RefreshToken string `db:"refresh_token"`
+	AthleteId    uint64 `db:"athlete_id"`
 }
 
 func (s *StravaAuth) Exists() bool {
@@ -39,31 +28,34 @@ func (s *StravaAuth) IsExpired() bool {
 }
 
 // SelectStravaAuth selects and returns a single strava_auth record
-func SelectStravaAuth(pgxConn *PgxConn) (StravaAuth, error) {
-	q := `SELECT access_token, access_token_expires_at, refresh_token, athlete_id FROM strava_auth LIMIT 1`
+func SelectStravaAuth() (*StravaAuth, error) {
+	q := `SELECT access_token, access_token_expires_at, refresh_token, athlete_id
+            FROM strava_auth
+            LIMIT 1`
 	var res StravaAuth
-	err := pgxConn.Pool.
-		QueryRow(context.Background(), q).
-		Scan(&res.AccessToken, &res.ExpiresAt, &res.RefreshToken, &res.AthleteId)
-	if err != nil {
-		return res, err
+	if err := db.Get(&res, q); err != nil {
+		return &res, err
 	}
-	return res, nil
+	return &res, nil
 }
 
 // InsertStravaAuth inserts a new strava_auth record
-func InsertStravaAuth(pgxConn *PgxConn, a StravaAuth) error {
-	q := `INSERT INTO strava_auth(access_token, access_token_expires_at, refresh_token, athlete_id) VALUES ($1, $2, $3, $4)`
-	_, err := pgxConn.Pool.Exec(context.Background(), q, a.AccessToken, a.ExpiresAt, a.RefreshToken, a.AthleteId)
+func InsertStravaAuth(a StravaAuth) error {
+	q := `INSERT INTO strava_auth(access_token, access_token_expires_at, refresh_token, athlete_id)
+            VALUES (?, ?, ?, ?)`
+	res := db.MustExec(q, a.AccessToken, a.ExpiresAt, a.RefreshToken, a.AthleteId)
+	_, err := res.LastInsertId()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func UpdateStravaAuth(pgxConn *PgxConn, sa StravaAuth) error {
-	q := `UPDATE strava_auth SET access_token=$1, access_token_expires_at=$2, refresh_token=$3 WHERE athlete_id=$4`
-	_, err := pgxConn.Pool.Exec(context.Background(), q, sa.AccessToken, sa.ExpiresAt, sa.RefreshToken, sa.AthleteId)
+func UpdateStravaAuth(sa StravaAuth) error {
+	q := `UPDATE strava_auth
+            SET access_token=?, access_token_expires_at=?, refresh_token=?
+            WHERE athlete_id=?`
+	_, err := db.Exec(q, sa.AccessToken, sa.ExpiresAt, sa.RefreshToken, sa.AthleteId)
 	if err != nil {
 		return err
 	}
@@ -72,11 +64,11 @@ func UpdateStravaAuth(pgxConn *PgxConn, sa StravaAuth) error {
 
 // StravaAthlete represent db table `athlete`
 type StravaAthlete struct {
-	StravaId      uint64
-	FirstName     string
-	LastName      string
-	Profile       string
-	ProfileMedium string
+	StravaId      uint64 `db:"strava_id"`
+	FirstName     string `db:"first_name"`
+	LastName      string `db:"last_name"`
+	Profile       string `db:"profile"`
+	ProfileMedium string `db:"profile_medium"`
 }
 
 func (s *StravaAthlete) Exists() bool {
@@ -84,22 +76,24 @@ func (s *StravaAthlete) Exists() bool {
 }
 
 // SelectStravaAthleteById selects and returns a single strava athlete record
-func SelectStravaAthleteById(pgxConn *PgxConn, athleteId uint64) (StravaAthlete, error) {
-	q := `SELECT strava_id, first_name, last_name, profile, profile_medium FROM athlete WHERE strava_id=$1`
+func SelectStravaAthleteById(athleteId uint64) (*StravaAthlete, error) {
+	q := `SELECT strava_id, first_name, last_name, profile, profile_medium
+            FROM athlete
+            WHERE strava_id=?`
 	var res StravaAthlete
-	err := pgxConn.Pool.
-		QueryRow(context.Background(), q, athleteId).
-		Scan(&res.StravaId, &res.FirstName, &res.LastName, &res.Profile, &res.ProfileMedium)
+	err := db.Get(&res, q, athleteId)
 	if err != nil {
-		return res, nil
+		return &res, err
 	}
-	return res, nil
+	return &res, nil
 }
 
 // InsertStravaAthelete inserts a new strava athlete record
-func InsertStravaAthelete(pgxConn *PgxConn, a StravaAthlete) error {
-	q := `INSERT INTO athlete(strava_id, first_name, last_name, profile, profile_medium) VALUES($1, $2, $3, $4, $5)`
-	_, err := pgxConn.Pool.Exec(context.Background(), q, a.StravaId, a.FirstName, a.LastName, a.Profile, a.ProfileMedium)
+func InsertStravaAthelete(a StravaAthlete) error {
+	q := `INSERT INTO athlete(strava_id, first_name, last_name, profile, profile_medium)
+            VALUES(?, ?, ?, ?, ?)`
+	res := db.MustExec(q, a.StravaId, a.FirstName, a.LastName, a.Profile, a.ProfileMedium)
+	_, err := res.LastInsertId()
 	if err != nil {
 		return err
 	}
@@ -107,12 +101,12 @@ func InsertStravaAthelete(pgxConn *PgxConn, a StravaAthlete) error {
 }
 
 type RaceActivity struct {
-	StravaId  uint64
-	AthleteId uint64
-	Name      string
-	NameSlug  string
-	Distance  float64
-	StartDate time.Time
+	StravaId  uint64    `db:"strava_id"`
+	AthleteId uint64    `db:"strava_athlete_id"`
+	Name      string    `db:"name"`
+	Distance  float64   `db:"distance"`
+	StartDate time.Time `db:"start_date_local"`
+	Polyline  string    `db:"polyline"`
 }
 
 func (r *RaceActivity) Exists() bool {
@@ -120,10 +114,11 @@ func (r *RaceActivity) Exists() bool {
 }
 
 // InsertRaceActivity inserts a new race_activity record
-func InsertRaceActivity(pgxConn *PgxConn, r RaceActivity) error {
-	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, name_slug, distance, start_date_local) VALUES($1, $2, $3, $4, $5, $6)`
-
-	_, err := pgxConn.Pool.Exec(context.Background(), q, r.StravaId, r.AthleteId, r.Name, r.NameSlug, r.Distance, r.StartDate)
+func InsertRaceActivity(r RaceActivity) error {
+	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, distance, start_date_local)
+            VALUES(?, ?, ?, ?, ?)`
+	res := db.MustExec(q, r.StravaId, r.AthleteId, r.Name, r.Distance, r.StartDate)
+	_, err := res.LastInsertId()
 	if err != nil {
 		return err
 	}
@@ -132,25 +127,27 @@ func InsertRaceActivity(pgxConn *PgxConn, r RaceActivity) error {
 }
 
 // SelectRaceActivityById selects and returns a single race_activity record by strava_id
-func SelectRaceActivityById(pgxConn *PgxConn, stravaId uint64) (RaceActivity, error) {
-	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, start_date_local FROM race_activity WHERE strava_id=$1`
+func SelectRaceActivityById(stravaId uint64) (*RaceActivity, error) {
+	q := `SELECT strava_id, strava_athlete_id, name, distance, start_date_local
+            FROM race_activity
+            WHERE strava_id=?`
 	var res RaceActivity
 
-	err := pgxConn.Pool.
-		QueryRow(context.Background(), q, stravaId).
-		Scan(&res.StravaId, &res.AthleteId, &res.Name, &res.NameSlug, &res.Distance, &res.StartDate)
+	err := db.Get(&res, q, stravaId)
 	if err != nil {
-		return res, nil
+		return &res, err
 	}
 
-	return res, nil
+	return &res, nil
 }
 
-func SelectAllRaces(pgxConn *PgxConn) ([]RaceActivity, error) {
-	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, start_date_local FROM race_activity ORDER BY start_date_local DESC`
+func SelectAllRaces() ([]RaceActivity, error) {
+	q := `SELECT strava_id, strava_athlete_id, name, distance, start_date_local
+            FROM race_activity
+            ORDER BY start_date_local DESC`
 	var res []RaceActivity
 
-	rows, err := pgxConn.Pool.Query(context.Background(), q)
+	rows, err := db.Query(q)
 	if err != nil {
 		return res, fmt.Errorf("Failed to execute SelectAllRaces query: %w", err)
 	}
@@ -158,7 +155,7 @@ func SelectAllRaces(pgxConn *PgxConn) ([]RaceActivity, error) {
 
 	for rows.Next() {
 		var r RaceActivity
-		err := rows.Scan(&r.StravaId, &r.AthleteId, &r.Name, &r.NameSlug, &r.Distance, &r.StartDate)
+		err := rows.Scan(&r.StravaId, &r.AthleteId, &r.Name, &r.Distance, &r.StartDate)
 		if err != nil {
 			return res, fmt.Errorf("Error scanning race activity rows: %w", err)
 		}
@@ -167,22 +164,6 @@ func SelectAllRaces(pgxConn *PgxConn) ([]RaceActivity, error) {
 
 	if err := rows.Err(); err != nil {
 		return res, err
-	}
-
-	return res, nil
-}
-
-func SelectRaceByYearAndSlug(pgxConn *PgxConn, year int, slug string) (RaceActivity, error) {
-	q := `SELECT strava_id, strava_athlete_id, name, name_slug, distance, start_date_local
-    FROM race_activity
-    WHERE name_slug=$1 and EXTRACT(year FROM "start_date_local")=$2`
-	var res RaceActivity
-
-	err := pgxConn.Pool.
-		QueryRow(context.Background(), q, slug, year).
-		Scan(&res.StravaId, &res.AthleteId, &res.Name, &res.NameSlug, &res.Distance, &res.StartDate)
-	if err != nil {
-		return res, fmt.Errorf("Failed to select race activity by year and slug: %s", err)
 	}
 
 	return res, nil

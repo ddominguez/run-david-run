@@ -89,7 +89,7 @@ type Athlete struct {
 	ProfileMedium string `json:"profile_medium"`
 }
 
-type authTokenResp struct {
+type AuthTokenResp struct {
 	TokenType    string  `json:"token_type"`
 	ExpiresAt    uint64  `json:"expires_at"`
 	ExpiresIn    uint64  `json:"expires_in"`
@@ -152,7 +152,7 @@ func (a *Authorization) Url() string {
 	return fmt.Sprintf("%s/authorize?%s", oauth_uri, qs.Encode())
 }
 
-func (a *Authorization) ReqAccessToken(code string) (authTokenResp, error) {
+func (a *Authorization) ReqAccessToken(code string) (AuthTokenResp, error) {
 	payload := struct {
 		ClientId     string `json:"client_id"`
 		ClientSecret string `json:"client_secret"`
@@ -165,7 +165,7 @@ func (a *Authorization) ReqAccessToken(code string) (authTokenResp, error) {
 		GrantType:    "authorization_code",
 	}
 
-	var tkResp authTokenResp
+	var tkResp AuthTokenResp
 
 	reqBody, err := json.Marshal(payload)
 	if err != nil {
@@ -188,7 +188,7 @@ func (a *Authorization) ReqAccessToken(code string) (authTokenResp, error) {
 	return tkResp, nil
 }
 
-func (a *Authorization) RefreshToken(refreshToken string) (authTokenResp, error) {
+func (a *Authorization) RefreshToken(refreshToken string) (AuthTokenResp, error) {
 	payload := map[string]string{
 		"client_id":     a.ClientId,
 		"client_secret": a.ClientSecret,
@@ -196,7 +196,7 @@ func (a *Authorization) RefreshToken(refreshToken string) (authTokenResp, error)
 		"refresh_token": refreshToken,
 	}
 
-	var tkResp authTokenResp
+	var tkResp AuthTokenResp
 
 	reqBody, err := json.Marshal(payload)
 	if err != nil {

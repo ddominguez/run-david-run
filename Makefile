@@ -1,6 +1,6 @@
 BUILD_DIR=./build
 MIGRATIONS_DIR=./migrations
-DB_CONNECTION=postgres postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+SQLITE_DB=./strava.db
 
 run-static:
 	python -m http.server --directory dist
@@ -14,24 +14,18 @@ clean-dist:
 test:
 	go test ./...
 
-db-start:
-	docker compose up -d db
-
-db-shell:
-	docker compose exec db psql -d ${DB_NAME} -h localhost -U ${DB_USER}
-
 migrate-status:
-	goose -dir $(MIGRATIONS_DIR) $(DB_CONNECTION) status
+	goose -dir $(MIGRATIONS_DIR) sqlite3 $(SQLITE_DB) status
 
 migrate-up:
-	goose -dir $(MIGRATIONS_DIR) $(DB_CONNECTION) up
+	goose -dir $(MIGRATIONS_DIR) sqlite3 $(SQLITE_DB) up
 
 migrate-reset:
-	goose -dir $(MIGRATIONS_DIR) $(DB_CONNECTION) reset
+	goose -dir $(MIGRATIONS_DIR) sqlite3 $(SQLITE_DB) reset
 
 # -- make migrate-create NAME=migration_name
 migrate-create:
-	goose -dir $(MIGRATIONS_DIR) $(DB_CONNECTION) create $(NAME) sql
+	goose -dir $(MIGRATIONS_DIR) sqlite3 $(SQLITE_DB) create $(NAME) sql
 
 tw-build:
 	tailwindcss -i ./css/input.css -o ./dist/styles.css --minify
