@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -9,6 +10,10 @@ import (
 )
 
 var db = sqlx.MustConnect("sqlite3", "strava.db")
+
+func IsEmptyResultSet(e string) bool {
+	return strings.Contains(e, "no rows in result set")
+}
 
 // StravaAuth represents db table `strava_auth`
 type StravaAuth struct {
