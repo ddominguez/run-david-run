@@ -151,10 +151,11 @@ var newTokenCmd = &cobra.Command{
 		if !athleteExists && oauthResp.Athlete.Id > 0 {
 			fmt.Println("-- inserting strava athlete")
 			_ = db.InsertStravaAthelete(db.StravaAthlete{
-				StravaId:  oauthResp.Athlete.Id,
-				FirstName: oauthResp.Athlete.FirstName,
-				LastName:  oauthResp.Athlete.LastName,
-				Profile:   oauthResp.Athlete.Profile,
+				StravaId:      oauthResp.Athlete.Id,
+				FirstName:     oauthResp.Athlete.FirstName,
+				LastName:      oauthResp.Athlete.LastName,
+				Profile:       oauthResp.Athlete.Profile,
+				ProfileMedium: oauthResp.Athlete.ProfileMedium,
 			})
 		}
 
