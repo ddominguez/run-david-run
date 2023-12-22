@@ -82,15 +82,6 @@ func runServer(oauth strava.Authorization) strava.AuthTokenResp {
 	return oauthResp
 }
 
-func newDBStravaAuth(authResp strava.AuthTokenResp) db.StravaAuth {
-	return db.StravaAuth{
-		AccessToken:  authResp.AccessToken,
-		RefreshToken: authResp.RefreshToken,
-		ExpiresAt:    authResp.ExpiresAt,
-		AthleteId:    authResp.Athlete.Id,
-	}
-}
-
 var newTokenCmd = &cobra.Command{
 	Use:   "newtoken",
 	Short: "Get new access and refresh tokens from Strava",
@@ -124,13 +115,30 @@ var newTokenCmd = &cobra.Command{
 		if oauthUser.AthleteId == 0 {
 			fmt.Println("-- inserting strava auth")
 			runServer(oauth)
-			oauthData := newDBStravaAuth(oauthResp)
-			err = db.InsertStravaAuth(oauthData)
+			err = db.InsertStravaAuth(
+				db.StravaAuth{
+					AccessToken:  oauthResp.AccessToken,
+					RefreshToken: oauthResp.RefreshToken,
+					ExpiresAt:    oauthResp.ExpiresAt,
+					AthleteId:    oauthResp.Athlete.Id,
+				},
+			)
 		} else {
 			fmt.Println("-- refreshing access token")
 			oauthResp, err = oauth.RefreshToken(oauthUser.RefreshToken)
-			oauthData := newDBStravaAuth(oauthResp)
-			err = db.UpdateStravaAuth(oauthData)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			// refresh token does not return athlete data
+			err = db.UpdateStravaAuth(
+				db.StravaAuth{
+					AccessToken:  oauthResp.AccessToken,
+					RefreshToken: oauthResp.RefreshToken,
+					ExpiresAt:    oauthResp.ExpiresAt,
+					AthleteId:    oauthUser.AthleteId,
+				},
+			)
 		}
 		if err != nil {
 			fmt.Println(err)
