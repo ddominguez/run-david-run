@@ -93,8 +93,9 @@ func newDBStravaAuth(authResp strava.AuthTokenResp) db.StravaAuth {
 
 var newTokenCmd = &cobra.Command{
 	Use:   "newtoken",
-	Short: "Get and save updated Strava tokens.",
-	Long:  "newtoken is for saving Strava tokens for Strava API requests.",
+	Short: "Get new access and refresh tokens from Strava",
+	Long: "newtoken will request new access and refresh tokens from Strava.\n" +
+		"The access token is needed for Strava API requests.",
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 
