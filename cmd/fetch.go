@@ -9,7 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getLatestActivityEpochTS(athleteId uint64) (int64, error) {
+func dateTimeToEpoch(dt string) (int64, error) {
+	t, err := time.Parse(time.RFC3339, dt)
+	if err != nil {
+		fmt.Println("unable to parse latest activity timestamp: ", err)
+		return 0, err
+	}
+	return t.Unix(), nil
+}
+
+func getLatestActivityEpoch(athleteId uint64) (int64, error) {
 	res, err := db.SelectLatestActivityTimeStamp(athleteId)
 	if err != nil {
 		fmt.Println("unable to select latest activity timestamp: ", err)
@@ -20,12 +29,7 @@ func getLatestActivityEpochTS(athleteId uint64) (int64, error) {
 		return 0, nil
 	}
 
-	t, err := time.Parse(time.RFC3339, res)
-	if err != nil {
-		fmt.Println("unable to parse latest activity timestamp: ", err)
-		return 0, err
-	}
-	return t.Unix(), nil
+	return dateTimeToEpoch(res)
 }
 
 var fetchCmd = &cobra.Command{
@@ -47,7 +51,7 @@ var fetchCmd = &cobra.Command{
 			return
 		}
 
-		latest_ts, err := getLatestActivityEpochTS(stravaAuth.AthleteId)
+		latest_ts, err := getLatestActivityEpoch(stravaAuth.AthleteId)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -106,11 +110,16 @@ var fetchCmd = &cobra.Command{
 		}
 
 		if last_activity_ts != "" {
-			err := db.UpdateLatestActivityTimeStamp(stravaAuth.AthleteId, last_activity_ts)
+			epoch, err := dateTimeToEpoch(last_activity_ts)
 			if err != nil {
 				fmt.Println(err)
 			}
-			fmt.Println("--- updated last activity timestamp ---")
+			if epoch != latest_ts {
+				err = db.UpdateLatestActivityTimeStamp(stravaAuth.AthleteId, last_activity_ts)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		}
 
 		fmt.Println("-- done ---")
