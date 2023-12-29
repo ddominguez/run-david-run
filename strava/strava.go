@@ -18,20 +18,18 @@ const api_uri = "https://www.strava.com/api/v3"
 const oauth_uri = "https://www.strava.com/oauth"
 
 type Activity struct {
-	Id             uint64    `json:"id"`
-	Name           string    `json:"name"`
-	Distance       float64   `json:"distance"`
-	MovingTime     int       `json:"moving_time"`
-	ElapsedTime    int       `json:"elapsed_time"`
-	SportType      string    `json:"sport_type"`
-	WorkoutType    uint8     `json:"workout_type"`
-	StartDateLocal time.Time `json:"start_date_local"`
+	Id             uint64  `json:"id"`
+	Name           string  `json:"name"`
+	Distance       float64 `json:"distance"`
+	MovingTime     int     `json:"moving_time"`
+	ElapsedTime    int     `json:"elapsed_time"`
+	SportType      string  `json:"sport_type"`
+	WorkoutType    uint8   `json:"workout_type"`
+	StartDateLocal string  `json:"start_date_local"`
 	Map            struct {
 		Id              string `json:"id"`
 		SummaryPolyline string `json:"summary_polyline"`
 	} `json:"map"`
-
-	NameSlug string
 }
 
 func (a *Activity) DistanceInMiles() string {
@@ -240,18 +238,26 @@ func GetActivity(c *Client, id uint64) (Activity, error) {
 	return activity, nil
 }
 
+type ReqParams struct {
+	Page    uint16
+	PerPage uint8
+	After   int64
+}
+
 // GetActivities will return an array of strava activities for an authorized user
-func GetActivities(c *Client, page uint16, perPage uint8) ([]Activity, error) {
+func GetActivities(c *Client, rp ReqParams) ([]Activity, error) {
 	var activities []Activity
 
 	qs := url.Values{}
-	qs.Set("page", fmt.Sprintf("%d", page))
-	qs.Set("per_page", fmt.Sprintf("%d", perPage))
+	qs.Set("page", fmt.Sprintf("%d", rp.Page))
+	qs.Set("per_page", fmt.Sprintf("%d", rp.PerPage))
+	qs.Set("after", fmt.Sprintf("%d", rp.After))
 
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", c.accessToken),
 	}
-	resp, err := c.Get(fmt.Sprintf("%s/activities?%s", api_uri, qs.Encode()), headers)
+	url := fmt.Sprintf("%s/athlete/activities?%s", api_uri, qs.Encode())
+	resp, err := c.Get(url, headers)
 	if err != nil {
 		return activities, err
 	}
