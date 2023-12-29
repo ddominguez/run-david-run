@@ -69,31 +69,31 @@ func UpdateStravaAuth(sa StravaAuth) error {
 
 // StravaAthlete represent db table `athlete`
 type StravaAthlete struct {
-	StravaId                uint64 `db:"strava_id"`
-	FirstName               string `db:"first_name"`
-	LastName                string `db:"last_name"`
-	Profile                 string `db:"profile"`
-	ProfileMedium           string `db:"profile_medium"`
-	LatestActivityTimestamp string `db:"latest_activity_timestamp"`
+	StravaId               uint64 `db:"strava_id"`
+	FirstName              string `db:"first_name"`
+	LastName               string `db:"last_name"`
+	Profile                string `db:"profile"`
+	ProfileMedium          string `db:"profile_medium"`
+	LatestActivityDateTime string `db:"latest_activity_datetime"`
 }
 
 func (s *StravaAthlete) Exists() bool {
 	return s.StravaId > 0
 }
 
-func SelectLatestActivityTimeStamp(athleteId uint64) (string, error) {
-	q := `SELECT latest_activity_timestamp FROM athlete WHERE strava_id=?`
-	var res string
-	err := db.Get(&res, q, athleteId)
+func SelectLatestActivityDateTime(athleteId uint64) (string, error) {
+	q := `SELECT latest_activity_datetime FROM athlete WHERE strava_id=?`
+	var dt string
+	err := db.Get(&dt, q, athleteId)
 	if err != nil {
-		return res, err
+		return dt, err
 	}
-	return res, nil
+	return dt, nil
 }
 
-func UpdateLatestActivityTimeStamp(athleteId uint64, ts string) error {
-	q := `UPDATE athlete SET latest_activity_timestamp=? WHERE strava_id=?`
-	res, err := db.Exec(q, ts, athleteId)
+func UpdateLatestActivityDateTime(athleteId uint64, dt string) error {
+	q := `UPDATE athlete SET latest_activity_datetime=? WHERE strava_id=?`
+	res, err := db.Exec(q, dt, athleteId)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (r *RaceActivity) Exists() bool {
 
 // InsertRaceActivity inserts a new race_activity record
 func InsertRaceActivity(r RaceActivity) error {
-	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, distance, start_date_local, polyline) VALUES(?, ?, ?, ?, ?)`
+	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, distance, start_date_local, polyline) VALUES(?, ?, ?, ?, ?, ?)`
 	res := db.MustExec(q, r.StravaId, r.AthleteId, r.Name, r.Distance, r.StartDate, r.Polyline)
 	_, err := res.LastInsertId()
 	if err != nil {

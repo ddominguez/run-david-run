@@ -22,7 +22,7 @@ CREATE TABLE athlete (
     last_name TEXT NOT NULL,
     profile TEXT,
     profile_medium TEXT,
-    latest_activity_timestamp TEXT DEFAULT ''
+    latest_activity_datetime TEXT DEFAULT ''
 );
 -- +goose StatementEnd
 

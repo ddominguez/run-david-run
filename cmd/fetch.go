@@ -12,16 +12,16 @@ import (
 func dateTimeToEpoch(dt string) (int64, error) {
 	t, err := time.Parse(time.RFC3339, dt)
 	if err != nil {
-		fmt.Println("unable to parse latest activity timestamp: ", err)
+		fmt.Println("unable to parse latest activity datetime: ", err)
 		return 0, err
 	}
 	return t.Unix(), nil
 }
 
 func getLatestActivityEpoch(athleteId uint64) (int64, error) {
-	res, err := db.SelectLatestActivityTimeStamp(athleteId)
+	res, err := db.SelectLatestActivityDateTime(athleteId)
 	if err != nil {
-		fmt.Println("unable to select latest activity timestamp: ", err)
+		fmt.Println("unable to select latest activity datetime: ", err)
 		return 0, err
 	}
 
@@ -51,7 +51,7 @@ var fetchCmd = &cobra.Command{
 			return
 		}
 
-		latest_ts, err := getLatestActivityEpoch(stravaAuth.AthleteId)
+		latestActivityEpoch, err := getLatestActivityEpoch(stravaAuth.AthleteId)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -60,12 +60,12 @@ var fetchCmd = &cobra.Command{
 		client := strava.NewClient(stravaAuth.AccessToken)
 		var page uint16
 		var perPage uint8 = 200
-		var last_activity_ts string
+		var latestActivityDateTime string
 
 		params := strava.ReqParams{
 			Page:    page,
 			PerPage: perPage,
-			After:   latest_ts,
+			After:   latestActivityEpoch,
 		}
 
 		for page = 1; true; page++ {
@@ -106,16 +106,16 @@ var fetchCmd = &cobra.Command{
 				}
 				fmt.Println(a.Name)
 			}
-			last_activity_ts = activities[activitiesLen-1].StartDateLocal
+			latestActivityDateTime = activities[activitiesLen-1].StartDateLocal
 		}
 
-		if last_activity_ts != "" {
-			epoch, err := dateTimeToEpoch(last_activity_ts)
+		if latestActivityDateTime != "" {
+			currEpoch, err := dateTimeToEpoch(latestActivityDateTime)
 			if err != nil {
 				fmt.Println(err)
 			}
-			if epoch != latest_ts {
-				err = db.UpdateLatestActivityTimeStamp(stravaAuth.AthleteId, last_activity_ts)
+			if currEpoch != latestActivityEpoch {
+				err = db.UpdateLatestActivityDateTime(stravaAuth.AthleteId, latestActivityDateTime)
 				if err != nil {
 					fmt.Println(err)
 				}
