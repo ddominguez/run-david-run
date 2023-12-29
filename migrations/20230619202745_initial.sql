@@ -3,7 +3,7 @@
 CREATE TABLE strava_auth (
     athlete_id INTEGER PRIMARY KEY,
     access_token TEXT NOT NULL,
-    access_token_expires_at INTEGER NOT NUll,
+    access_token_expires_at INTEGER NOT NULL,
     refresh_token TEXT NOT NULL
 );
 
@@ -22,7 +22,7 @@ CREATE TABLE athlete (
     last_name TEXT NOT NULL,
     profile TEXT,
     profile_medium TEXT,
-    latest_activity_id INTEGER
+    latest_activity_timestamp TEXT DEFAULT ''
 );
 -- +goose StatementEnd
 

@@ -69,15 +69,39 @@ func UpdateStravaAuth(sa StravaAuth) error {
 
 // StravaAthlete represent db table `athlete`
 type StravaAthlete struct {
-	StravaId      uint64 `db:"strava_id"`
-	FirstName     string `db:"first_name"`
-	LastName      string `db:"last_name"`
-	Profile       string `db:"profile"`
-	ProfileMedium string `db:"profile_medium"`
+	StravaId                uint64 `db:"strava_id"`
+	FirstName               string `db:"first_name"`
+	LastName                string `db:"last_name"`
+	Profile                 string `db:"profile"`
+	ProfileMedium           string `db:"profile_medium"`
+	LatestActivityTimestamp string `db:"latest_activity_timestamp"`
 }
 
 func (s *StravaAthlete) Exists() bool {
 	return s.StravaId > 0
+}
+
+func SelectLatestActivityTimeStamp(athleteId uint64) (string, error) {
+	q := `SELECT latest_activity_timestamp FROM athlete WHERE strava_id=?`
+	var res string
+	err := db.Get(&res, q, athleteId)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+func UpdateLatestActivityTimeStamp(athleteId uint64, ts string) error {
+	q := `UPDATE athlete SET latest_activity_timestamp=? WHERE strava_id=?`
+	res, err := db.Exec(q, ts, athleteId)
+	if err != nil {
+		return err
+	}
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // SelectStravaAthleteById selects and returns a single strava athlete record
@@ -95,8 +119,7 @@ func SelectStravaAthleteById(athleteId uint64) (*StravaAthlete, error) {
 
 // InsertStravaAthelete inserts a new strava athlete record
 func InsertStravaAthelete(a StravaAthlete) error {
-	q := `INSERT INTO athlete(strava_id, first_name, last_name, profile, profile_medium)
-            VALUES(?, ?, ?, ?, ?)`
+	q := `INSERT INTO athlete(strava_id, first_name, last_name, profile, profile_medium) VALUES(?, ?, ?, ?, ?)`
 	res := db.MustExec(q, a.StravaId, a.FirstName, a.LastName, a.Profile, a.ProfileMedium)
 	_, err := res.LastInsertId()
 	if err != nil {
@@ -106,12 +129,12 @@ func InsertStravaAthelete(a StravaAthlete) error {
 }
 
 type RaceActivity struct {
-	StravaId  uint64    `db:"strava_id"`
-	AthleteId uint64    `db:"strava_athlete_id"`
-	Name      string    `db:"name"`
-	Distance  float64   `db:"distance"`
-	StartDate time.Time `db:"start_date_local"`
-	Polyline  string    `db:"polyline"`
+	StravaId  uint64  `db:"strava_id"`
+	AthleteId uint64  `db:"strava_athlete_id"`
+	Name      string  `db:"name"`
+	Distance  float64 `db:"distance"`
+	StartDate string  `db:"start_date_local"`
+	Polyline  string  `db:"polyline"`
 }
 
 func (r *RaceActivity) Exists() bool {
@@ -120,9 +143,8 @@ func (r *RaceActivity) Exists() bool {
 
 // InsertRaceActivity inserts a new race_activity record
 func InsertRaceActivity(r RaceActivity) error {
-	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, distance, start_date_local)
-            VALUES(?, ?, ?, ?, ?)`
-	res := db.MustExec(q, r.StravaId, r.AthleteId, r.Name, r.Distance, r.StartDate)
+	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, distance, start_date_local, polyline) VALUES(?, ?, ?, ?, ?)`
+	res := db.MustExec(q, r.StravaId, r.AthleteId, r.Name, r.Distance, r.StartDate, r.Polyline)
 	_, err := res.LastInsertId()
 	if err != nil {
 		return err
@@ -131,19 +153,13 @@ func InsertRaceActivity(r RaceActivity) error {
 	return nil
 }
 
-// SelectRaceActivityById selects and returns a single race_activity record by strava_id
-func SelectRaceActivityById(stravaId uint64) (*RaceActivity, error) {
-	q := `SELECT strava_id, strava_athlete_id, name, distance, start_date_local
-            FROM race_activity
-            WHERE strava_id=?`
-	var res RaceActivity
-
-	err := db.Get(&res, q, stravaId)
+func SelectRaceActivityId(stravaId uint64) (uint64, error) {
+	var sid uint64
+	err := db.Get(&sid, "SELECT strava_id from race_activity where strava_id=?", stravaId)
 	if err != nil {
-		return &res, err
+		return sid, err
 	}
-
-	return &res, nil
+	return sid, nil
 }
 
 func SelectAllRaces() ([]RaceActivity, error) {
