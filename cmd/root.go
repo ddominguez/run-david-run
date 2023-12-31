@@ -7,6 +7,6 @@ import (
 var rootCmd = &cobra.Command{Use: "races"}
 
 func Execute() error {
-	rootCmd.AddCommand(newTokenCmd, fetchCmd)
+	rootCmd.AddCommand(newTokenCmd, fetchCmd, genHtmlCmd)
 	return rootCmd.Execute()
 }
