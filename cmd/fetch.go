@@ -92,13 +92,16 @@ var fetchCmd = &cobra.Command{
 					fmt.Printf("--- strava activity id %d already exists ---\n", a.Id)
 					continue
 				}
+				// TODO: figure out a better way to do this
 				err = db.InsertRaceActivity(db.RaceActivity{
-					StravaId:  a.Id,
-					AthleteId: stravaAuth.AthleteId,
-					Name:      a.Name,
-					StartDate: a.StartDateLocal,
-					Distance:  a.Distance,
-					Polyline:  a.Map.SummaryPolyline,
+					StravaId:    a.Id,
+					AthleteId:   stravaAuth.AthleteId,
+					Name:        a.Name,
+					StartDate:   a.StartDateLocal,
+					Distance:    a.Distance,
+					MovingTime:  a.MovingTime,
+					ElapsedTime: a.ElapsedTime,
+					Polyline:    a.Map.SummaryPolyline,
 				})
 				if err != nil {
 					fmt.Println("unable to insert new race activity", err)

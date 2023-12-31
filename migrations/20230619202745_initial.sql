@@ -12,6 +12,8 @@ CREATE TABLE race_activity (
     strava_athlete_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     distance REAL DEFAULT 0.0,
+    moving_time INTEGER DEFAULT 0,
+    elapsed_time INTEGER DEFAULT 0,
     start_date_local TEXT NOT NULL,
     polyline TEXT NOT NULL
 );

@@ -129,12 +129,14 @@ func InsertStravaAthelete(a StravaAthlete) error {
 }
 
 type RaceActivity struct {
-	StravaId  uint64  `db:"strava_id"`
-	AthleteId uint64  `db:"strava_athlete_id"`
-	Name      string  `db:"name"`
-	Distance  float64 `db:"distance"`
-	StartDate string  `db:"start_date_local"`
-	Polyline  string  `db:"polyline"`
+	StravaId    uint64  `db:"strava_id"`
+	AthleteId   uint64  `db:"strava_athlete_id"`
+	Name        string  `db:"name"`
+	Distance    float64 `db:"distance"`
+	MovingTime  uint32  `db:"moving_time"`
+	ElapsedTime uint32  `db:"elapsed_time"`
+	StartDate   string  `db:"start_date_local"`
+	Polyline    string  `db:"polyline"`
 }
 
 func (r *RaceActivity) Exists() bool {
@@ -143,8 +145,20 @@ func (r *RaceActivity) Exists() bool {
 
 // InsertRaceActivity inserts a new race_activity record
 func InsertRaceActivity(r RaceActivity) error {
-	q := `INSERT INTO race_activity(strava_id, strava_athlete_id, name, distance, start_date_local, polyline) VALUES(?, ?, ?, ?, ?, ?)`
-	res := db.MustExec(q, r.StravaId, r.AthleteId, r.Name, r.Distance, r.StartDate, r.Polyline)
+	q := `INSERT INTO race_activity(
+            strava_id,
+            strava_athlete_id,
+            name,
+            distance,
+            moving_time,
+            elapsed_time,
+            start_date_local,
+            polyline
+        ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`
+	res := db.MustExec(
+		q, r.StravaId, r.AthleteId, r.Name, r.Distance, r.MovingTime,
+		r.ElapsedTime, r.StartDate, r.Polyline,
+	)
 	_, err := res.LastInsertId()
 	if err != nil {
 		return err

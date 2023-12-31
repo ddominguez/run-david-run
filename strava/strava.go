@@ -21,8 +21,8 @@ type Activity struct {
 	Id             uint64  `json:"id"`
 	Name           string  `json:"name"`
 	Distance       float64 `json:"distance"`
-	MovingTime     int     `json:"moving_time"`
-	ElapsedTime    int     `json:"elapsed_time"`
+	MovingTime     uint32  `json:"moving_time"`
+	ElapsedTime    uint32  `json:"elapsed_time"`
 	SportType      string  `json:"sport_type"`
 	WorkoutType    uint8   `json:"workout_type"`
 	StartDateLocal string  `json:"start_date_local"`
