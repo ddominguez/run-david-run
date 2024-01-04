@@ -83,6 +83,10 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 func startServer() {
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/activity/", handleActivity)
+
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	port := "8080"
 	fmt.Printf("Listening on http://localhost:%s\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)

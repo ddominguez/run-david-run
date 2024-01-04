@@ -1,0 +1,47 @@
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body {
+  font-family: "Open Sans", sans-serif;
+  line-height: 1.5;
+  background-color: #111;
+  color: #eee;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  font-weight: 400;
+  margin: 0;
+  color: #e0af68;
+}
+
+h2.year {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.container {
+  padding: 1.25rem;
+}
+
+.activity-link {
+  margin: 0.5rem 0;
+}
+
+.intro {
+  margin-bottom: 1.25rem;
+}
+
