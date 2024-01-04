@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -143,6 +142,15 @@ func (r *RaceActivity) Exists() bool {
 	return r.StravaId > 0
 }
 
+// RaceYear parses the StartDate string and returns the year of activity
+func (r *RaceActivity) RaceYear() (int, error) {
+	t, err := time.Parse(time.RFC3339, r.StartDate)
+	if err != nil {
+		return 0, err
+	}
+	return t.Year(), nil
+}
+
 // InsertRaceActivity inserts a new race_activity record
 func InsertRaceActivity(r RaceActivity) error {
 	q := `INSERT INTO race_activity(
@@ -176,30 +184,12 @@ func SelectRaceActivityId(stravaId uint64) (uint64, error) {
 	return sid, nil
 }
 
-func SelectAllRaces() ([]RaceActivity, error) {
-	q := `SELECT strava_id, strava_athlete_id, name, distance, start_date_local
-            FROM race_activity
-            ORDER BY start_date_local DESC`
+func AllRacesForIndex() ([]RaceActivity, error) {
+	q := `SELECT strava_id, name, start_date_local FROM race_activity ORDER BY start_date_local DESC`
 	var res []RaceActivity
-
-	rows, err := db.Query(q)
+	err := db.Select(&res, q)
 	if err != nil {
-		return res, fmt.Errorf("Failed to execute SelectAllRaces query: %w", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var r RaceActivity
-		err := rows.Scan(&r.StravaId, &r.AthleteId, &r.Name, &r.Distance, &r.StartDate)
-		if err != nil {
-			return res, fmt.Errorf("Error scanning race activity rows: %w", err)
-		}
-		res = append(res, r)
-	}
-
-	if err := rows.Err(); err != nil {
 		return res, err
 	}
-
 	return res, nil
 }

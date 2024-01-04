@@ -1,5 +1,5 @@
 {{define "content"}}
-<div class="text-[#7aa2f7] text-xl font-semibold mb-5 leading-normal flex gap-3">
+<div class="">
     Hi there! I'm David. I'm a software developer and avid runner based in Queens, NYC.<br>
     Below you will find a list of running events that I have participated in.
 </div>
@@ -7,9 +7,9 @@
 {{- range .Activities }}
 {{- if ne $year .RaceYear -}}
 {{ $year = .RaceYear }}
-<h2 class="text-2xl font-bold text-[#e0af68]">{{$year}}</h2>
+<h2 class="">{{$year}}</h2>
 {{- end}}
-<div class="my-2"><a class="underline font-semibold" href="/{{$year}}/{{.NameSlug}}/">{{.Name}}</a></div>
+<div class=""><a class="" href="/race/{{.StravaId}}">{{.Name}}</a></div>
 {{- else }}
 <div>There are no race activities.</div>
 {{- end}}
