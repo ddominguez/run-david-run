@@ -5,7 +5,7 @@ SQLITE_DB=./strava.db
 run-static:
 	python -m http.server --directory dist
 
-build-static: clean-dist tw-build
+build-static: clean-dist
 	go run cmd/genhtml/main.go
 
 clean-dist:
@@ -26,9 +26,3 @@ migrate-reset:
 # -- make migrate-create NAME=migration_name
 migrate-create:
 	goose -dir $(MIGRATIONS_DIR) sqlite3 $(SQLITE_DB) create $(NAME) sql
-
-tw-build:
-	tailwindcss -i ./css/input.css -o ./dist/styles.css --minify
-
-tw-watch:
-	tailwindcss -i ./css/input.css -o ./dist/styles.css --watch
