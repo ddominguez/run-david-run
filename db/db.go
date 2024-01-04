@@ -184,6 +184,15 @@ func SelectRaceActivityId(stravaId uint64) (uint64, error) {
 	return sid, nil
 }
 
+func SelectRaceActivityById(stravaId uint64) (RaceActivity, error) {
+	var resp RaceActivity
+	err := db.Get(&resp, "SELECT * from race_activity where strava_id=?", stravaId)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
 func AllRacesForIndex() ([]RaceActivity, error) {
 	q := `SELECT strava_id, name, start_date_local FROM race_activity ORDER BY start_date_local DESC`
 	var res []RaceActivity

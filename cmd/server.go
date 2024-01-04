@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/ddominguez/run-david-run/db"
@@ -44,8 +46,43 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleActivity(w http.ResponseWriter, r *http.Request) {
+	pathParams := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(pathParams) != 2 {
+		http.NotFound(w, r)
+		return
+	}
+
+	id, err := strconv.ParseUint(pathParams[1], 10, 0)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	activity, err := db.SelectRaceActivityById(id)
+	if err != nil {
+		fmt.Println(err)
+		http.NotFound(w, r)
+		return
+	}
+
+	tmplFiles := []string{
+		"templates/base.html",
+		"templates/race.html",
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	tmpl := template.Must(template.ParseFiles(tmplFiles...))
+	if err := tmpl.ExecuteTemplate(w, "base", activity); err != nil {
+		fmt.Println("failed to execute to templates", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+}
+
 func startServer() {
 	http.HandleFunc("/", handleIndex)
+	http.HandleFunc("/activity/", handleActivity)
 	port := "8080"
 	fmt.Printf("Listening on http://localhost:%s\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)

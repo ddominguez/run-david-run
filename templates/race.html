@@ -1,24 +1,19 @@
 {{define "content"}}
-<div class="mb-3"><a href="/" class="underline">&larr; back to list</a></div>
-<h1 class="text-[#e0af68] text-2xl font-bold">{{.Name}}</h1>
-<div>{{.DateTime}}</div>
-<div class="my-5 flex gap-2">
-    <div>
-        <span class="block">Distance</span>
-        <span class="font-bold text-xl">{{.Distance}}</span>
+<div class="back-link"><a href="/">&larr; back to list</a></div>
+<h1 class="h1">{{.Name}}</h1>
+<div class="date">{{.StartDate}}</div>
+<div class="stats">
+    <div class="stat">
+        <span>Distance</span>
+        <span>0.00 mi</span>
     </div>
-    <div class="pl-2 border-l">
-        <span class="block">Pace</span>
-        <span class="font-bold text-xl">{{.Pace}}</span>
+    <div class="stat">
+        <span>Pace</span>
+        <span>00:00 /mi</span>
     </div>
-    <div class="pl-2 border-l">
-        <span class="block">Time</span>
-        <span class="font-bold text-xl">{{.Time}}</span>
+    <div class="stat">
+        <span>Time</span>
+        <span>00:00:00</span>
     </div>
 </div>
-{{- if .MapboxURL }}
-<div>
-    <img src={{.MapboxURL}} />
-</div>
-{{- end }}
 {{end}}
