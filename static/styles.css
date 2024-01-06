@@ -16,32 +16,65 @@ body {
   margin: 0;
   padding: 0;
 }
-
 h1, h2, h3 {
   font-weight: 400;
   margin: 0;
   color: #e0af68;
 }
-
-h2.year {
-  font-size: 1.5rem;
-  line-height: 2rem;
-}
-
 a {
   color: #fff;
   text-decoration: underline;
 }
-
 .container {
   padding: 1.25rem;
 }
 
 .activity-link {
   margin: 0.5rem 0;
+  font-weight: 600;
 }
-
 .intro {
+  font-size: 1.25rem;
+  font-weight: 600;
   margin-bottom: 1.25rem;
 }
+h2.year {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 2rem;
+  margin-top: 1.25rem;
+}
+h2.year:first-of-type {
+  margin: 0;
+}
 
+.back-link{
+  margin-bottom: 0.75rem;
+}
+.race-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+.race-stats {
+  margin: 1.25rem 0;
+  display: flex;
+  justify-content: space-between;
+}
+.stat {
+  border: 0 solid #efefef;
+  border-left-width: 1px;
+  padding-left: 0.5rem;
+  font-size: 1.5rem;
+}
+.stat:first-of-type {
+  border: none;
+  padding: 0;
+}
+.stat span {
+  display: block;
+}
+.stat span:nth-of-type(2) {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
