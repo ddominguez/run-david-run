@@ -75,6 +75,9 @@ h2.year:first-of-type {
   display: block;
 }
 .stat span:nth-of-type(2) {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 600;
+}
+.map img {
+  max-width: 100%;
 }

@@ -8,7 +8,6 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -63,20 +62,6 @@ var re = regexp.MustCompile("[^a-z0-9]+")
 
 func (a *Activity) NameSlugified() string {
 	return strings.Trim(re.ReplaceAllString(strings.ToLower(a.Name), "-"), "-")
-}
-
-func (a *Activity) MapboxURL() string {
-	token, found := os.LookupEnv("MAPBOX_ACCESS_TOKEN")
-	if !found {
-		log.Println("MAPBOX_ACCESS_TOKEN is not set")
-		return ""
-	}
-
-	base := "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static"
-	params := fmt.Sprintf("logo=false&access_token=%s", token)
-	polyline := url.QueryEscape(a.Map.SummaryPolyline)
-
-	return fmt.Sprintf("%s/path-3+f11-0.6(%s)/auto/500x300?%s", base, polyline, params)
 }
 
 type Athlete struct {

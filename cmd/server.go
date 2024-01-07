@@ -71,9 +71,19 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 		"templates/race.html",
 	}
 
+	data := struct {
+		Name      string
+		StartDate string
+		MapboxUrl string
+	}{
+		Name:      activity.Name,
+		StartDate: activity.StartDate,
+		MapboxUrl: mapboxURL(activity.Polyline),
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	tmpl := template.Must(template.ParseFiles(tmplFiles...))
-	if err := tmpl.ExecuteTemplate(w, "base", activity); err != nil {
+	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
 		fmt.Println("failed to execute to templates", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
