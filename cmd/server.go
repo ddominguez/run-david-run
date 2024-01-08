@@ -17,6 +17,9 @@ type indexData struct {
 type raceData struct {
 	Name      string
 	StartDate string
+	Distance  string
+	Pace      string
+	Time      string
 	MapboxUrl string
 }
 
@@ -68,6 +71,9 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 	data := raceData{
 		Name:      activity.Name,
 		StartDate: activity.StartDate,
+		Distance:  activity.DistanceInMiles(),
+		Pace:      activity.Pace(),
+		Time:      activity.TimeFormatted(),
 		MapboxUrl: mapboxURL(activity.Polyline),
 	}
 

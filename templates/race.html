@@ -5,15 +5,15 @@
 <div class="race-stats">
     <div class="stat">
         <span>Distance</span>
-        <span>0.00 mi</span>
+        <span>{{.Distance}}</span>
     </div>
     <div class="stat">
         <span>Pace</span>
-        <span>00:00 /mi</span>
+        <span>{{.Pace}}</span>
     </div>
     <div class="stat">
         <span>Time</span>
-        <span>00:00:00</span>
+        <span>{{.Time}}</span>
     </div>
 </div>
 {{- if .MapboxUrl }}
