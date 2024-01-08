@@ -11,6 +11,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type indexData struct {
+	Activities []db.RaceActivity
+}
+type raceData struct {
+	Name      string
+	StartDate string
+	MapboxUrl string
+}
+
 func handleIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
@@ -24,9 +33,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		Activities []db.RaceActivity
-	}{
+	data := indexData{
 		Activities: activities,
 	}
 
@@ -58,11 +65,7 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		Name      string
-		StartDate string
-		MapboxUrl string
-	}{
+	data := raceData{
 		Name:      activity.Name,
 		StartDate: activity.StartDate,
 		MapboxUrl: mapboxURL(activity.Polyline),
