@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"text/template"
 
 	"github.com/ddominguez/run-david-run/db"
+	"github.com/ddominguez/run-david-run/page"
 	"github.com/spf13/cobra"
 )
 
@@ -20,10 +20,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	activities, err := db.AllRacesForIndex()
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w,
-			http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError,
-		)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -32,17 +29,12 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	}{
 		Activities: activities,
 	}
-	tmplFiles := []string{
-		"templates/base.html",
-		"templates/index.html",
-	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl := template.Must(template.ParseFiles(tmplFiles...))
-	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+	page := page.New([]string{"templates/base.html", "templates/index.html"})
+	err = page.Render(w, "base", data)
+	if err != nil {
 		fmt.Println("failed to execute to templates", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -66,11 +58,6 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplFiles := []string{
-		"templates/base.html",
-		"templates/race.html",
-	}
-
 	data := struct {
 		Name      string
 		StartDate string
@@ -81,12 +68,11 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 		MapboxUrl: mapboxURL(activity.Polyline),
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl := template.Must(template.ParseFiles(tmplFiles...))
-	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+	page := page.New([]string{"templates/base.html", "templates/race.html"})
+	err = page.Render(w, "base", data)
+	if err != nil {
 		fmt.Println("failed to execute to templates", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
 	}
 }
 
