@@ -16,7 +16,9 @@ body {
   margin: 0;
   padding: 0;
 }
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-weight: 400;
   margin: 0;
   color: #e0af68;
@@ -27,6 +29,8 @@ a {
 }
 .container {
   padding: 1.25rem;
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
 .activity-link {
@@ -48,7 +52,7 @@ h2.year:first-of-type {
   margin: 0;
 }
 
-.back-link{
+.back-link {
   margin-bottom: 0.75rem;
 }
 .race-name {
@@ -60,6 +64,7 @@ h2.year:first-of-type {
   margin: 1.25rem 0;
   display: flex;
   justify-content: space-between;
+  max-width: 500px;
 }
 .stat {
   border: 0 solid #efefef;
