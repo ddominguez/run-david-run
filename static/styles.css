@@ -9,7 +9,7 @@ html {
 }
 
 body {
-  font-family: "Open Sans", sans-serif;
+  font-family: system-ui, Arial, sans-serif;
   line-height: 1.5;
   background-color: #111;
   color: #eee;
@@ -67,14 +67,7 @@ h2.year:first-of-type {
   max-width: 500px;
 }
 .stat {
-  border: 0 solid #efefef;
-  border-left-width: 1px;
-  padding-left: 0.5rem;
   font-size: 1.5rem;
-}
-.stat:first-of-type {
-  border: none;
-  padding: 0;
 }
 .stat span {
   display: block;
