@@ -68,9 +68,15 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	racedt, err := activity.StartDateFormatted()
+	if err != nil {
+		fmt.Println(err)
+		racedt = activity.StartDate
+	}
+
 	data := raceData{
 		Name:      activity.Name,
-		StartDate: activity.StartDate,
+		StartDate: racedt,
 		Distance:  activity.DistanceInMiles(),
 		Pace:      activity.Pace(),
 		Time:      activity.TimeFormatted(),

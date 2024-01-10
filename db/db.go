@@ -144,6 +144,14 @@ func (r *RaceActivity) Exists() bool {
 	return r.StravaId > 0
 }
 
+func (r RaceActivity) StartDateFormatted() (string, error) {
+	t, err := time.Parse(time.RFC3339, r.StartDate)
+	if err != nil {
+		return "", err
+	}
+	return t.Format(time.RFC1123), nil
+}
+
 // RaceYear parses the StartDate string and returns the year of activity
 func (r *RaceActivity) RaceYear() (int, error) {
 	t, err := time.Parse(time.RFC3339, r.StartDate)
