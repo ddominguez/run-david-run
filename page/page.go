@@ -21,3 +21,13 @@ func (p Page) Render(w io.Writer, name string, data interface{}) error {
 func New(files []string) Page {
 	return Page{files: files}
 }
+
+type RaceData struct {
+	Name      string
+	StartDate string
+	Distance  string
+	Pace      string
+	Time      string
+	MapboxUrl string
+	StaticUrl string
+}

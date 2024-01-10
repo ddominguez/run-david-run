@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 
@@ -183,6 +184,12 @@ func (r *RaceActivity) TimeFormatted() string {
 	return fmt.Sprintf("%d:%02d:%02d", hours, minutes, seconds)
 }
 
+var re = regexp.MustCompile("[^a-z0-9]+")
+
+func (r *RaceActivity) NameSlugified() string {
+	return strings.Trim(re.ReplaceAllString(strings.ToLower(r.Name), "-"), "-")
+}
+
 // InsertRaceActivity inserts a new race_activity record
 func InsertRaceActivity(r RaceActivity) error {
 	q := `INSERT INTO race_activity(
@@ -229,6 +236,15 @@ func AllRacesForIndex() ([]RaceActivity, error) {
 	q := `SELECT strava_id, name, start_date_local FROM race_activity ORDER BY start_date_local DESC`
 	var res []RaceActivity
 	err := db.Select(&res, q)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+func AllRaceActivities() ([]RaceActivity, error) {
+	var res []RaceActivity
+	err := db.Select(&res, "SELECT * from race_activity ORDER BY start_date_local DESC")
 	if err != nil {
 		return res, err
 	}

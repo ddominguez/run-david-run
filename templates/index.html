@@ -4,12 +4,19 @@
     Below you will find a list of running events that I have participated in.
 </div>
 {{- $year := 0 }}
+{{- $isGen := .IsGenerated}}
 {{- range .Activities }}
 {{- if ne $year .RaceYear -}}
 {{ $year = .RaceYear }}
 <h2 class="year">{{$year}}</h2>
 {{- end}}
-<div class="activity-link"><a class="" href="/activity/{{.StravaId}}">{{.Name}}</a></div>
+<div class="activity-link">
+  {{if $isGen}}
+<a href="/{{$year}}/{{.NameSlugified}}/">{{.Name}}</a>
+  {{else}}
+<a href="/activity/{{.StravaId}}">{{.Name}}</a>
+  {{end}}
+</div>
 {{- else }}
 <div>There are no race activities.</div>
 {{- end}}
