@@ -8,6 +8,7 @@ import (
 
 	"github.com/ddominguez/run-david-run/db"
 	"github.com/ddominguez/run-david-run/page"
+	"github.com/ddominguez/run-david-run/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -69,10 +70,10 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 	data := page.RaceData{
 		Name:      activity.Name,
 		StartDate: racedt,
-		Distance:  activity.DistanceInMiles(),
-		Pace:      activity.Pace(),
-		Time:      activity.TimeFormatted(),
-		MapboxUrl: mapboxURL(activity.Polyline),
+		Distance:  utils.ActivityDistance(activity.Distance),
+		Pace:      utils.ActivityPace(activity.Distance, activity.ElapsedTime),
+		Time:      utils.TimeFormatted(activity.ElapsedTime),
+		MapboxUrl: utils.MapboxURL(activity.Polyline),
 	}
 
 	tmpl := page.New([]string{"templates/base.html", "templates/race.html"})

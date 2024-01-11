@@ -7,6 +7,7 @@ import (
 
 	"github.com/ddominguez/run-david-run/db"
 	"github.com/ddominguez/run-david-run/page"
+	"github.com/ddominguez/run-david-run/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -46,10 +47,10 @@ var genHtmlCmd = &cobra.Command{
 			data := page.RaceData{
 				Name:      a.Name,
 				StartDate: racedt,
-				Distance:  a.DistanceInMiles(),
-				Pace:      a.Pace(),
-				Time:      a.TimeFormatted(),
-				MapboxUrl: mapboxURL(a.Polyline),
+				Distance:  utils.ActivityDistance(a.Distance),
+				Pace:      utils.ActivityPace(a.Distance, a.ElapsedTime),
+				Time:      utils.TimeFormatted(a.ElapsedTime),
+				MapboxUrl: utils.MapboxURL(a.Polyline),
 			}
 
 			err = raceTmpl.Execute(file, "base", data)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -29,28 +28,6 @@ type Activity struct {
 		Id              string `json:"id"`
 		SummaryPolyline string `json:"summary_polyline"`
 	} `json:"map"`
-}
-
-func (a *Activity) DistanceInMiles() string {
-	d := a.Distance * 0.000621371
-	return fmt.Sprintf("%0.2f mi", d)
-}
-
-func (a *Activity) Pace() string {
-	miles := a.Distance * 0.000621371
-	minutes := math.Floor(float64(a.ElapsedTime / 60))
-	pace := minutes / miles
-	paceMinutes := math.Floor(pace)
-	paceSeconds := math.Round((pace - paceMinutes) * 60)
-	return fmt.Sprintf("%d:%02d /mi", int(paceMinutes), int(paceSeconds))
-}
-
-func (a *Activity) TimeFormatted() string {
-	hours := a.ElapsedTime / 3600
-	remainingSeconds := a.ElapsedTime % 3600
-	minutes := remainingSeconds / 60
-	seconds := remainingSeconds % 60
-	return fmt.Sprintf("%d:%02d:%02d", hours, minutes, seconds)
 }
 
 // IsRace will return true for running race events
