@@ -6,10 +6,11 @@ run-static:
 	python -m http.server --directory dist
 
 build-static: clean-dist
-	go run cmd/genhtml/main.go
+	go run main.go genhtml
+	cp -r ./static/ ./dist/
 
 clean-dist:
-	rm -rf ./dist/*
+	rm -rf ./dist
 
 test:
 	go test ./...
