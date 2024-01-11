@@ -32,8 +32,8 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		IsGenerated: false,
 	}
 
-	page := page.New([]string{"templates/base.html", "templates/index.html"})
-	err = page.Render(w, "base", data)
+	tmpl := page.New([]string{"templates/base.html", "templates/index.html"})
+	err = tmpl.Execute(w, "base", data)
 	if err != nil {
 		fmt.Println("failed to execute to templates", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -75,8 +75,8 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 		MapboxUrl: mapboxURL(activity.Polyline),
 	}
 
-	page := page.New([]string{"templates/base.html", "templates/race.html"})
-	err = page.Render(w, "base", data)
+	tmpl := page.New([]string{"templates/base.html", "templates/race.html"})
+	err = tmpl.Execute(w, "base", data)
 	if err != nil {
 		fmt.Println("failed to execute to templates", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

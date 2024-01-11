@@ -21,6 +21,8 @@ var genHtmlCmd = &cobra.Command{
 			return
 		}
 
+		raceTmpl := page.New([]string{"templates/base.html", "templates/race.html"})
+
 		// build race files
 		for _, a := range activities {
 			raceYear, _ := a.RaceYear()
@@ -50,8 +52,7 @@ var genHtmlCmd = &cobra.Command{
 				MapboxUrl: mapboxURL(a.Polyline),
 			}
 
-			tmpl := page.New([]string{"templates/base.html", "templates/race.html"})
-			err = tmpl.Render(file, "base", data)
+			err = raceTmpl.Execute(file, "base", data)
 			if err != nil {
 				fmt.Println("failed to execute race template", err)
 			}
@@ -74,8 +75,8 @@ var genHtmlCmd = &cobra.Command{
 			return
 		}
 
-		page := page.New([]string{"templates/base.html", "templates/index.html"})
-		err = page.Render(file, "base", data)
+		indexTmpl := page.New([]string{"templates/base.html", "templates/index.html"})
+		err = indexTmpl.Execute(file, "base", data)
 		if err != nil {
 			fmt.Println("failed to execute index template", err)
 		}

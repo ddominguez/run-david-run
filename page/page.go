@@ -5,21 +5,16 @@ import (
 	"io"
 )
 
-type Page struct {
-	files []string
+type Tmpl struct {
+	template *template.Template
 }
 
-func (p Page) Template() *template.Template {
-	return template.Must(template.ParseFiles(p.files...))
+func (t Tmpl) Execute(w io.Writer, name string, data interface{}) error {
+	return t.template.ExecuteTemplate(w, name, data)
 }
 
-func (p Page) Render(w io.Writer, name string, data interface{}) error {
-	t := p.Template()
-	return t.ExecuteTemplate(w, name, data)
-}
-
-func New(files []string) Page {
-	return Page{files: files}
+func New(files []string) Tmpl {
+	return Tmpl{template: template.Must(template.ParseFiles(files...))}
 }
 
 type RaceData struct {
