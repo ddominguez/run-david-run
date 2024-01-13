@@ -11,65 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func generateIndex(tmpl page.Tmpl, activities []db.RaceActivity) error {
-	data := struct {
-		Activities  []db.RaceActivity
-		IsGenerated bool
-	}{
-		Activities:  activities,
-		IsGenerated: true,
-	}
-	file, err := os.Create(path.Join("./dist", "index.html"))
-	if err != nil {
-		return fmt.Errorf("failed to create file: %s", err)
-	}
-
-	err = tmpl.Execute(file, "base", data)
-	if err != nil {
-		return fmt.Errorf("failed to write file: %s", err)
-	}
-
-	file.Close()
-	fmt.Printf("created %s\n", file.Name())
-	return nil
-}
-
-func generateRace(tmpl page.Tmpl, activity db.RaceActivity) error {
-	raceYear, _ := activity.RaceYear()
-	fp := path.Join("./dist", fmt.Sprintf("%d", raceYear), activity.NameSlugified(), "index.html")
-	if err := os.MkdirAll(path.Dir(fp), 0770); err != nil {
-		return fmt.Errorf("failed to create path %s", err)
-	}
-
-	file, err := os.Create(fp)
-	if err != nil {
-		return fmt.Errorf("failed to create file: %s", err)
-	}
-	racedt, err := activity.StartDateFormatted()
-	if err != nil {
-		fmt.Println(err)
-		racedt = activity.StartDate
-	}
-
-	data := page.RaceData{
-		Name:      activity.Name,
-		StartDate: racedt,
-		Distance:  utils.ActivityDistance(activity.Distance),
-		Pace:      utils.ActivityPace(activity.Distance, activity.ElapsedTime),
-		Time:      utils.TimeFormatted(activity.ElapsedTime),
-		MapboxUrl: utils.MapboxURL(activity.Polyline),
-	}
-
-	err = tmpl.Execute(file, "base", data)
-	if err != nil {
-		return fmt.Errorf("failed to write file: %s", err)
-	}
-
-	file.Close()
-	fmt.Printf("created %s\n", fp)
-	return nil
-}
-
 var genHtmlCmd = &cobra.Command{
 	Use:   "genhtml",
 	Short: "Generate html for saved race activities",
@@ -86,18 +27,46 @@ var genHtmlCmd = &cobra.Command{
 
 		// generate race files
 		for _, a := range activities {
-            err := generateRace(raceTmpl, a)
+			raceYear, _ := a.RaceYear()
+			racefile := path.Join("./dist", fmt.Sprintf("%d", raceYear), a.NameSlugified(), "index.html")
+			if err := os.MkdirAll(path.Dir(racefile), 0770); err != nil {
+				fmt.Printf("failed to create path %s\n", err)
+				return
+			}
+			racedt, err := a.StartDateFormatted()
 			if err != nil {
 				fmt.Println(err)
-                return
+				racedt = a.StartDate
+			}
+
+			data := page.RaceData{
+				Name:      a.Name,
+				StartDate: racedt,
+				Distance:  utils.ActivityDistance(a.Distance),
+				Pace:      utils.ActivityPace(a.Distance, a.ElapsedTime),
+				Time:      utils.TimeFormatted(a.ElapsedTime),
+				MapboxUrl: utils.MapboxURL(a.Polyline),
+			}
+			err = raceTmpl.Generate(racefile, "base", data)
+			if err != nil {
+				fmt.Println(err)
+				return
 			}
 		}
 
 		// generate index file
-		err = generateIndex(indexTmpl, activities)
+		data := struct {
+			Activities  []db.RaceActivity
+			IsGenerated bool
+		}{
+			Activities:  activities,
+			IsGenerated: true,
+		}
+		indexFile := path.Join("./dist", "index.html")
+		err = indexTmpl.Generate(indexFile, "base", data)
 		if err != nil {
 			fmt.Println(err)
-            return
+			return
 		}
 	},
 }
