@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func generateIndex(tmpl page.Tmpl, activities *[]db.RaceActivity) error {
+func generateIndex(tmpl page.Tmpl, activities []db.RaceActivity) error {
 	data := struct {
-		Activities  *[]db.RaceActivity
+		Activities  []db.RaceActivity
 		IsGenerated bool
 	}{
 		Activities:  activities,
@@ -34,7 +34,7 @@ func generateIndex(tmpl page.Tmpl, activities *[]db.RaceActivity) error {
 	return nil
 }
 
-func generateRace(tmpl page.Tmpl, activity *db.RaceActivity) error {
+func generateRace(tmpl page.Tmpl, activity db.RaceActivity) error {
 	raceYear, _ := activity.RaceYear()
 	fp := path.Join("./dist", fmt.Sprintf("%d", raceYear), activity.NameSlugified(), "index.html")
 	if err := os.MkdirAll(path.Dir(fp), 0770); err != nil {
@@ -86,7 +86,7 @@ var genHtmlCmd = &cobra.Command{
 
 		// generate race files
 		for _, a := range activities {
-            err := generateRace(raceTmpl, &a)
+            err := generateRace(raceTmpl, a)
 			if err != nil {
 				fmt.Println(err)
                 return
@@ -94,7 +94,7 @@ var genHtmlCmd = &cobra.Command{
 		}
 
 		// generate index file
-		err = generateIndex(indexTmpl, &activities)
+		err = generateIndex(indexTmpl, activities)
 		if err != nil {
 			fmt.Println(err)
             return
