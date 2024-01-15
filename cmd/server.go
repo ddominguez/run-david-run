@@ -18,7 +18,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	activities, err := db.AllRacesForIndex()
+	activities, err := db.AllRaceActivities()
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

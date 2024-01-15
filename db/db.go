@@ -216,16 +216,6 @@ func SelectRaceActivityById(stravaId uint64) (RaceActivity, error) {
 	return resp, nil
 }
 
-func AllRacesForIndex() ([]RaceActivity, error) {
-	q := `SELECT strava_id, name, start_date_local FROM race_activity ORDER BY start_date_local DESC`
-	var res []RaceActivity
-	err := db.Select(&res, q)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
-}
-
 func AllRaceActivities() ([]RaceActivity, error) {
 	var res []RaceActivity
 	err := db.Select(&res, "SELECT * from race_activity ORDER BY start_date_local DESC")
