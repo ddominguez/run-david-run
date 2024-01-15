@@ -128,23 +128,31 @@ func InsertStravaAthelete(a StravaAthlete) error {
 	return nil
 }
 
+type DateTime string
+
+func (dt DateTime) parsed() (time.Time, error) {
+	return time.Parse(time.RFC3339, string(dt))
+}
+
 type RaceActivity struct {
-	StravaId    uint64  `db:"strava_id"`
-	AthleteId   uint64  `db:"strava_athlete_id"`
-	Name        string  `db:"name"`
-	Distance    float64 `db:"distance"`
-	MovingTime  uint32  `db:"moving_time"`
-	ElapsedTime uint32  `db:"elapsed_time"`
-	StartDate   string  `db:"start_date_local"`
-	Polyline    string  `db:"polyline"`
+	StravaId    uint64   `db:"strava_id"`
+	AthleteId   uint64   `db:"strava_athlete_id"`
+	Name        string   `db:"name"`
+	Distance    float64  `db:"distance"`
+	MovingTime  uint32   `db:"moving_time"`
+	ElapsedTime uint32   `db:"elapsed_time"`
+	StartDate   DateTime `db:"start_date_local"`
+	Polyline    string   `db:"polyline"`
 }
 
 func (r *RaceActivity) Exists() bool {
 	return r.StravaId > 0
 }
 
+// StartDateFormatted parses a datetime string and returns a
+// formatted date with the following layout: Mon, 02 Jan 2006 15:04:05 MST
 func (r RaceActivity) StartDateFormatted() (string, error) {
-	t, err := time.Parse(time.RFC3339, r.StartDate)
+	t, err := r.StartDate.parsed()
 	if err != nil {
 		return "", err
 	}
@@ -152,8 +160,8 @@ func (r RaceActivity) StartDateFormatted() (string, error) {
 }
 
 // RaceYear parses the StartDate string and returns the year of activity
-func (r *RaceActivity) RaceYear() (int, error) {
-	t, err := time.Parse(time.RFC3339, r.StartDate)
+func (r RaceActivity) RaceYear() (int, error) {
+	t, err := r.StartDate.parsed()
 	if err != nil {
 		return 0, err
 	}

@@ -27,21 +27,27 @@ var genHtmlCmd = &cobra.Command{
 
 		// generate race files
 		for _, a := range activities {
-			raceYear, _ := a.RaceYear()
+			raceYear, err := a.RaceYear()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
 			racefile := path.Join("./dist", fmt.Sprintf("%d", raceYear), a.NameSlugified(), "index.html")
 			if err := os.MkdirAll(path.Dir(racefile), 0770); err != nil {
 				fmt.Printf("failed to create path %s\n", err)
 				return
 			}
-			racedt, err := a.StartDateFormatted()
+
+			startDate, err := a.StartDateFormatted()
 			if err != nil {
 				fmt.Println(err)
-				racedt = a.StartDate
+				return
 			}
 
 			data := page.RaceData{
 				Name:      a.Name,
-				StartDate: racedt,
+				StartDate: startDate,
 				Distance:  utils.ActivityDistance(a.Distance),
 				Pace:      utils.ActivityPace(a.Distance, a.ElapsedTime),
 				Time:      utils.TimeFormatted(a.ElapsedTime),

@@ -92,12 +92,12 @@ var fetchCmd = &cobra.Command{
 					fmt.Printf("--- strava activity id %d already exists ---\n", a.Id)
 					continue
 				}
-				// TODO: figure out a better way to do this
+				dbDateTime := db.DateTime(a.StartDateLocal)
 				err = db.InsertRaceActivity(db.RaceActivity{
 					StravaId:    a.Id,
 					AthleteId:   stravaAuth.AthleteId,
 					Name:        a.Name,
-					StartDate:   a.StartDateLocal,
+					StartDate:   dbDateTime,
 					Distance:    a.Distance,
 					MovingTime:  a.MovingTime,
 					ElapsedTime: a.ElapsedTime,

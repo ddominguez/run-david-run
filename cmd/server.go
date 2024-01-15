@@ -61,15 +61,15 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	racedt, err := activity.StartDateFormatted()
+	startDate, err := activity.StartDateFormatted()
 	if err != nil {
-		fmt.Println(err)
-		racedt = activity.StartDate
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 
 	data := page.RaceData{
 		Name:      activity.Name,
-		StartDate: racedt,
+		StartDate: startDate,
 		Distance:  utils.ActivityDistance(activity.Distance),
 		Pace:      utils.ActivityPace(activity.Distance, activity.ElapsedTime),
 		Time:      utils.TimeFormatted(activity.ElapsedTime),
