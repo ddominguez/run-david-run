@@ -145,7 +145,7 @@ type RaceActivity struct {
 	Polyline    string   `db:"polyline"`
 }
 
-func (r *RaceActivity) Exists() bool {
+func (r RaceActivity) Exists() bool {
 	return r.StravaId > 0
 }
 
