@@ -10,6 +10,7 @@ html {
 
 body {
   font-family: system-ui, Arial, sans-serif;
+  font-size: 1.2rem;
   line-height: 1.5;
   background-color: #111;
   color: #eee;
@@ -35,11 +36,9 @@ a {
 
 .activity-link {
   margin: 0.5rem 0;
-  font-weight: 600;
 }
 .intro {
   font-size: 1.25rem;
-  font-weight: 600;
   margin-bottom: 1.25rem;
 }
 h2.year {
