@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/ddominguez/run-david-run/db"
 	"github.com/ddominguez/run-david-run/page"
@@ -40,15 +39,8 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
-
 func handleActivity(w http.ResponseWriter, r *http.Request) {
-	pathParams := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParams) != 2 {
-		http.NotFound(w, r)
-		return
-	}
-
-	id, err := strconv.ParseUint(pathParams[1], 10, 0)
+	id, err := strconv.ParseUint(r.PathValue("id"), 10, 0)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -86,7 +78,7 @@ func handleActivity(w http.ResponseWriter, r *http.Request) {
 
 func startServer() {
 	http.HandleFunc("/", handleIndex)
-	http.HandleFunc("/activity/", handleActivity)
+	http.HandleFunc("/activity/{id}", handleActivity)
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
