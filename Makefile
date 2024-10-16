@@ -5,8 +5,12 @@ SQLITE_DB=./strava.db
 run-static:
 	python -m http.server --directory dist
 
-build-static: clean-dist
+build-dev: clean-dist
 	go run main.go genhtml
+	cp -r ./static/ ./dist/
+
+build-prd: clean-dist
+	APP_ENV=PRD go run main.go genhtml
 	cp -r ./static/ ./dist/
 
 clean-dist:
